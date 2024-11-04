@@ -39,7 +39,6 @@
   :config
   (exec-path-from-shell-initialize))
 
-
 ;; (use-package auto-package-update
 ;; :custom
 ;; (auto-package-update-interval 7)
