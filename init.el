@@ -25,6 +25,8 @@
 
 (package-initialize)
 (unless package-archive-contents)
+;; set the browse url function to firefox
+(setq browse-url-browser-function 'browse-url-firefox)
 
 ;; Initialize use-package on non-Linux platforms
 (unless (package-installed-p 'use-package)
@@ -142,13 +144,13 @@
   (evil-define-key '(insert) 'global (kbd "C-c C-c C-c") 'clipboard-kill-region)
 
   (evil-define-key 'normal 'global (kbd "<leader>fs") 'save-buffer)
+  (evil-define-key 'normal 'global (kbd "<leader>bl") 'mode-line-other-buffer)
   (evil-define-key 'normal 'global (kbd "<leader>to") 'tab-next)
   (evil-define-key 'normal 'global (kbd "<leader>t2") 'tab-new)
   (evil-define-key 'normal 'global (kbd "<leader>t0") 'tab-close)
   (evil-define-key 'normal 'global (kbd "<leader>xx") 'execute-extended-command)
   (evil-define-key 'normal 'global (kbd "<leader>hk") 'describe-key)
-  (evil-define-key 'normal 'global (kbd "<leader>xo") 'other-window)
-  (evil-define-key 'normal 'global (kbd "<leader>x0") 'delete-window)
+  (evil-define-key 'normal 'global (kbd "<leader>x") 'other-window)
   (evil-define-key 'normal 'global (kbd "<leader>wl") 'evil-window-right)
   (evil-define-key 'normal 'global (kbd "<leader>wh") 'evil-window-left)
   (evil-define-key 'normal 'global (kbd "<leader>wk") 'evil-window-up)
@@ -321,7 +323,8 @@
 (use-package org-roam
   :config
   (setq org-roam-directory "~/projects/notes")
-  (global-set-key (kbd "C-c n r f ") 'org-roam-node-find )
+  (global-set-key (kbd "C-c n r f") 'org-roam-node-find )
+  (global-set-key (kbd "C-c n r i") 'org-roam-node-insert)
   )
 
 (setq gdb-many-windows nil)
@@ -709,7 +712,6 @@ modes messing with indenting. This bruteforces it by relying on (the more
 reliable) RET, instead.
 
 See:
-
 - https://github.com/haskell/haskell-mode/issues/1265
 - https://emacs.stackexchange.com/a/2471
 "
@@ -734,6 +736,13 @@ Doesn’t work on the first line of a file.
   (evil-define-key 'normal haskell-mode-map "o" 'hly/evil-open-below)
   (evil-define-key 'normal haskell-mode-map "O" 'hly/evil-open-above))
 
+(defun my/haskell-fast-tags ()
+   ;; Use (buffer-file-name) and/or `default-directory` if necessary here
+   (let ((default-directory (haskell-cabal--find-tags-dir)))
+     (shell-command "~/.local/bin/fast-tags ...")))
+
+(add-hook 'haskell-mode-hook (lambda () (add-hook 'after-save-hook 'my/haskell-fast-tags t)))
+(add-hook 'haskell-mode-hook (lambda () (global-unset-key (kbd "<tab>"))))
 
 
 ;; ; START tsx 
@@ -810,6 +819,7 @@ Doesn’t work on the first line of a file.
         (add-to-list 'major-mode-remap-alist mapping))
       :config
       (os/setup-install-grammars))
+
 ;;     ;;;; Code Completion
 ;; (use-package corfu
 ;;   :ensure t
@@ -1106,7 +1116,7 @@ A single-digit prefix argument gives the top window arg*10%."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("4ade6b630ba8cbab10703b27fd05bb43aaf8a3e5ba8c2dc1ea4a2de5f8d45882" "88f7ee5594021c60a4a6a1c275614103de8c1435d6d08cc58882f920e0cec65e" "691d671429fa6c6d73098fc6ff05d4a14a323ea0a18787daeb93fde0e48ab18b" "e9d2cfe6cdb1ed56d4f886e01c67ffa88aedb315ce7ea795ccdc34f15e01e09b" "b5fd9c7429d52190235f2383e47d340d7ff769f141cd8f9e7a4629a81abc6b19" "8d3ef5ff6273f2a552152c7febc40eabca26bae05bd12bc85062e2dc224cde9a" "48042425e84cd92184837e01d0b4fe9f912d875c43021c3bcb7eeb51f1be5710" default))
+   '("9f297216c88ca3f47e5f10f8bd884ab24ac5bc9d884f0f23589b0a46a608fe14" "4ade6b630ba8cbab10703b27fd05bb43aaf8a3e5ba8c2dc1ea4a2de5f8d45882" "88f7ee5594021c60a4a6a1c275614103de8c1435d6d08cc58882f920e0cec65e" "691d671429fa6c6d73098fc6ff05d4a14a323ea0a18787daeb93fde0e48ab18b" "e9d2cfe6cdb1ed56d4f886e01c67ffa88aedb315ce7ea795ccdc34f15e01e09b" "b5fd9c7429d52190235f2383e47d340d7ff769f141cd8f9e7a4629a81abc6b19" "8d3ef5ff6273f2a552152c7febc40eabca26bae05bd12bc85062e2dc224cde9a" "48042425e84cd92184837e01d0b4fe9f912d875c43021c3bcb7eeb51f1be5710" default))
  '(global-display-line-numbers-mode t)
  '(package-selected-packages
    '(typit devdocs copilot smartparens yasnippet ido-completing-read+ lsp-bridge evil-snipe ido-mode dired-hide-dotfiles dired-open all-the-icons-dired dired-single eshell-git-prompt vterm eterm-256color rainbow-delimiters evil-nerd-commenter forge magit projectile company-box company pyvenv python-mode typescript-mode dap-mode lsp-treemacs lsp-ui lsp-mode visual-fill-column org-bullets hydra helpful which-key doom-modeline all-the-icons doom-themes command-log-mode evil-collection evil general no-littering auto-package-update)))
