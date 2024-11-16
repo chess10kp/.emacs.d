@@ -260,6 +260,12 @@
   (org-indent-mode))
 
 
+(use-package org-modern
+  :ensure t
+  :after org
+  :config
+  (with-eval-after-load 'org (global-org-modern-mode)))
+
 (use-package org
   :pin org
   :commands (org-capture org-agenda)
@@ -290,15 +296,18 @@
 	  ("l" "today I learnt" entry (file+headline "~/projects/notes/today-i-learnt.org" "Todos")
 	   "* TODO %i TIL: %? ")
 	  ("c" "Config" entry (file+headline "~/projects/notes/config.org" "Configuration")
-	   "* CONFIG %i %? ")
-	  ))
+	   "* CONFIG %i %? ")))
   (efs/org-font-setup)
   (add-hook 'org-mode-hook (lambda () (setq-local lsp-bridge-mode -1)))
   (global-set-key  (kbd "C-c C-o")'org-roam-visit-thing)
+  (setq org-blank-before-new-entry '((heading . nil) (plain-list-item . nil)))
 
   (evil-define-key 'normal 'global (kbd "<leader>mci") 'org-clock-in)
   (evil-define-key 'normal 'global (kbd "<leader>mco") 'org-clock-out)
   (evil-define-key 'normal 'global (kbd "<leader>mcl") 'org-clock-in-last)
+  (evil-define-key 'normal 'global (kbd "<leader>nts") 'org-narrow-to-subtree)
+  (evil-define-key 'normal 'global (kbd "<leader>nte") 'org-narrow-to-element)
+  (evil-define-key 'normal 'global (kbd "<leader>nwi") 'widen)
   (evil-define-key 'normal 'global (kbd "<leader>mt") 'org-todo))
 
 (use-package org-bullets
@@ -1118,6 +1127,7 @@ A single-digit prefix argument gives the top window arg*10%."
  '(custom-safe-themes
    '("81f53ee9ddd3f8559f94c127c9327d578e264c574cda7c6d9daddaec226f87bb" "9f297216c88ca3f47e5f10f8bd884ab24ac5bc9d884f0f23589b0a46a608fe14" "4ade6b630ba8cbab10703b27fd05bb43aaf8a3e5ba8c2dc1ea4a2de5f8d45882" "88f7ee5594021c60a4a6a1c275614103de8c1435d6d08cc58882f920e0cec65e" "691d671429fa6c6d73098fc6ff05d4a14a323ea0a18787daeb93fde0e48ab18b" "e9d2cfe6cdb1ed56d4f886e01c67ffa88aedb315ce7ea795ccdc34f15e01e09b" "b5fd9c7429d52190235f2383e47d340d7ff769f141cd8f9e7a4629a81abc6b19" "8d3ef5ff6273f2a552152c7febc40eabca26bae05bd12bc85062e2dc224cde9a" "48042425e84cd92184837e01d0b4fe9f912d875c43021c3bcb7eeb51f1be5710" default))
  '(global-display-line-numbers-mode t)
+ '(org-blank-before-new-entry '((heading . auto) (plain-list-item)))
  '(package-selected-packages
    '(typit devdocs copilot smartparens yasnippet ido-completing-read+ lsp-bridge evil-snipe ido-mode dired-hide-dotfiles dired-open all-the-icons-dired dired-single eshell-git-prompt vterm eterm-256color rainbow-delimiters evil-nerd-commenter forge magit projectile company-box company pyvenv python-mode typescript-mode dap-mode lsp-treemacs lsp-ui lsp-mode visual-fill-column org-bullets hydra helpful which-key doom-modeline all-the-icons doom-themes command-log-mode evil-collection evil general no-littering auto-package-update)))
 (custom-set-faces
