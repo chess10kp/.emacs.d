@@ -40,10 +40,6 @@
 
 (setq native-comp-jit-compilation nil)
 
-(use-package elcord
-  :defer t
-  :ensure t)
-
 (use-package exec-path-from-shell
   :config
   (exec-path-from-shell-initialize))
