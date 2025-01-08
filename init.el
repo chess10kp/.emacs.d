@@ -680,23 +680,11 @@
 (provide 'config)
 (setq compilation-scroll-output nil)
 
-(use-package projectile
-  :diminish projectile-mode
-  :config (projectile-mode)
-  :custom ((projectile-completion-system 'completing-read))
-  :bind-keymap
-  ("C-c p" . projectile-command-map)
-  :init
-  ;; NOTE: Set this to the folder where you keep your Git repos!
-  (when (file-directory-p "~/projects/")
-    (setq projectile-project-search-path '("~/projects")))
-  (setq projectile-switch-project-action #'projectile-dired))
-
-(evil-define-key 'normal 'global (kbd "<leader>p") 'projectile-command-map)
-
 (use-package magit
   :defer
   :commands magit-status
+  :config
+ (evil-define-key 'normal 'global (kbd "<leader>g") 'magit)
   :custom
   (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
 
