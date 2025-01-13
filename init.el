@@ -304,7 +304,7 @@
   (require 'org-habit)
   (add-to-list 'org-modules 'org-habit)
   (setq org-habit-graph-column 60)
-  (setq org-todo-keywords '((sequence "TODO(t)" "CONFIG(c)" "NEXT(n)" "STEP(s)" "INFO(f)" "PROGRESS(i)" "CLASS(c)" "PROJ(p)" "LOOP(r)" "WAIT(w)" "EVENT(e)" "HOLD(h)" "EMAIL(m)"  "IDEA(i)" "|""DONE(d)" "KILL(k)" "[X](X)")))
+  (setq org-todo-keywords '((sequence "TODO(t)" "CONFIG(C)" "NEXT(n)" "STEP(s)" "INFO(f)" "PROGRESS(i)" "CLASS(c)" "PROJ(p)" "LOOP(r)" "WAIT(w)" "EVENT(e)" "HOLD(h)" "EMAIL(m)"  "IDEA(i)" "|""DONE(d)" "KILL(k)" "[X](X)")))
   (setq org-time-stamp-custom-formats '( "%H:%M>"))
   (setq org-capture-templates
 	'(("t" "Todo" entry (file+headline "~/projects/notes/todo.org" "Todos")
