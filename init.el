@@ -101,7 +101,7 @@
 (use-package general
   :after evil)
 
-
+(which-key-mode)
 
 (use-package avy
   :after evil-mc
@@ -330,6 +330,8 @@
   (evil-define-key 'normal 'global (kbd "<leader>nwi") 'widen)
   (evil-define-key 'normal 'global (kbd "<leader>mcc") 'org-capture)
   (evil-define-key 'normal 'global (kbd "<leader>moa") 'org-agenda)
+  (evil-define-key 'normal 'global (kbd "<leader>ndy") 'org-roam-dailies-goto-today)
+  (evil-define-key 'normal 'global (kbd "<leader>ndw") 'org-roam-dailies-goto-tomorrow)
   (evil-define-key 'normal 'global (kbd "<leader>mt") 'org-todo))
 
 (use-package org-bullets
