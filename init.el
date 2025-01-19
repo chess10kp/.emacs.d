@@ -18,6 +18,7 @@
 
 (add-hook 'emacs-startup-hook #'efs/display-startup-time)
 
+
 ;; Initialize package sources
 (require 'package)
 
@@ -100,16 +101,7 @@
 (use-package general
   :after evil)
 
-;; python-mode
-(setq python-indent-offset 4)
 
-
-(use-package py-vterm-interaction
-  :hook (python-mode . py-vterm-interaction-mode)
-  :config
-  ;;; Suggested:
-  (setq-default py-vterm-interaction-repl-program "ipython")
-  (setq-default py-vterm-interaction-silent-cells t))
 
 (use-package avy
   :after evil-mc
@@ -280,6 +272,12 @@
   (setq org-indent-indentation-per-level 4) ; only when org modern is active
   )
 
+(use-package org-fragtog
+  :ensure t
+  :after org
+  :config
+  (add-hook 'org-mode-hook 'org-fragtog-mode))
+
 (use-package org
   :pin org
   :commands (org-capture org-agenda)
@@ -330,6 +328,8 @@
   (evil-define-key 'normal 'global (kbd "<leader>nts") 'org-narrow-to-subtree)
   (evil-define-key 'normal 'global (kbd "<leader>nte") 'org-narrow-to-element)
   (evil-define-key 'normal 'global (kbd "<leader>nwi") 'widen)
+  (evil-define-key 'normal 'global (kbd "<leader>mcc") 'org-capture)
+  (evil-define-key 'normal 'global (kbd "<leader>moa") 'org-agenda)
   (evil-define-key 'normal 'global (kbd "<leader>mt") 'org-todo))
 
 (use-package org-bullets
@@ -362,7 +362,9 @@
   (global-set-key (kbd "C-c n r i") 'org-roam-node-insert)
   (add-hook 'org-roam-mode #'org-roam-db-autosync-mode)
   (evil-define-key 'normal 'global (kbd "<leader>nrf") 'org-roam-node-find)
-  (evil-define-key 'normal 'global (kbd "<leader>nri") 'org-roam-node-insert))
+  (evil-define-key 'normal 'global (kbd "<leader>nri") 'org-roam-node-insert)
+(evil-define-key 'insert 'global (kbd "<M-n><M-i>") 'org-roam-node-insert))
+
 
 (setq gdb-many-windows nil)
 (defun set-gdb-layout(&optional c-buffer)
@@ -501,6 +503,18 @@
   ;; the mode gets enabled right away. Note that this forces loading the
   ;; package.
   (marginalia-mode))
+
+(use-package flyspell
+  :custom
+  (ispell-program-name "hunspell")
+  (ispell-default-dictionary "en_US")
+  :hook (text-mode . flyspell-mode)
+  :bind (("M-<f7>" . flyspell-buffer)))
+
+(use-package flyspell-correct
+  :after (flyspell)
+  :bind (("C-;" . flyspell-auto-correct-previous-word)
+         ("<f7>" . flyspell-correct-wrapper)))
 
 ;; Example configuration for Consult
 (use-package consult
@@ -1060,7 +1074,9 @@ Doesn’t work on the first line of a file.
   :config
   (evil-collection-define-key 'normal 'dired-mode-map
     "h" 'dired-single-up-directory
-    "l" 'dired-single-buffer))
+    "l" 'dired-single-buffer)
+  (setq dired-dwim-target t)
+  )
 
 (use-package dired-single
   :commands (dired dired-jump))
@@ -1126,12 +1142,17 @@ A single-digit prefix argument gives the top window arg*10%."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("81f53ee9ddd3f8559f94c127c9327d578e264c574cda7c6d9daddaec226f87bb" "9f297216c88ca3f47e5f10f8bd884ab24ac5bc9d884f0f23589b0a46a608fe14" "4ade6b630ba8cbab10703b27fd05bb43aaf8a3e5ba8c2dc1ea4a2de5f8d45882" "88f7ee5594021c60a4a6a1c275614103de8c1435d6d08cc58882f920e0cec65e" "691d671429fa6c6d73098fc6ff05d4a14a323ea0a18787daeb93fde0e48ab18b" "e9d2cfe6cdb1ed56d4f886e01c67ffa88aedb315ce7ea795ccdc34f15e01e09b" "b5fd9c7429d52190235f2383e47d340d7ff769f141cd8f9e7a4629a81abc6b19" "8d3ef5ff6273f2a552152c7febc40eabca26bae05bd12bc85062e2dc224cde9a" "48042425e84cd92184837e01d0b4fe9f912d875c43021c3bcb7eeb51f1be5710" default))
+   '("9d29a302302cce971d988eb51bd17c1d2be6cd68305710446f658958c0640f68" "81f53ee9ddd3f8559f94c127c9327d578e264c574cda7c6d9daddaec226f87bb" "9f297216c88ca3f47e5f10f8bd884ab24ac5bc9d884f0f23589b0a46a608fe14" "4ade6b630ba8cbab10703b27fd05bb43aaf8a3e5ba8c2dc1ea4a2de5f8d45882" "88f7ee5594021c60a4a6a1c275614103de8c1435d6d08cc58882f920e0cec65e" "691d671429fa6c6d73098fc6ff05d4a14a323ea0a18787daeb93fde0e48ab18b" "e9d2cfe6cdb1ed56d4f886e01c67ffa88aedb315ce7ea795ccdc34f15e01e09b" "b5fd9c7429d52190235f2383e47d340d7ff769f141cd8f9e7a4629a81abc6b19" "8d3ef5ff6273f2a552152c7febc40eabca26bae05bd12bc85062e2dc224cde9a" "48042425e84cd92184837e01d0b4fe9f912d875c43021c3bcb7eeb51f1be5710" default))
  '(elcord-refresh-rate 60)
  '(global-display-line-numbers-mode t)
+ '(org-agenda-files
+   '("/home/sigma/projects/notes/todo.org" "/home/sigma/projects/notes/org/process/leetcode/59MaximumSubarray.org" "/home/sigma/projects/notes/org/process/blizzard.org" "/home/sigma/projects/notes/org/process/chessjkl.org" "/home/sigma/projects/notes/org/process/convas.org" "/home/sigma/projects/notes/org/process/displway.org" "/home/sigma/projects/notes/org/process/gitgraft.org" "/home/sigma/projects/notes/org/process/leetcode.org" "/home/sigma/projects/notes/org/process/ortizbot.org" "/home/sigma/projects/notes/org/process/portfolio.org" "/home/sigma/projects/notes/org/process/snip.org" "/home/sigma/projects/notes/org/process/socraticoin.org" "/home/sigma/projects/notes/org/journal.org" "/home/sigma/projects/notes/org/notes.org" "/home/sigma/projects/notes/org/projects.org" "/home/sigma/projects/notes/org/umd.org"))
  '(org-blank-before-new-entry '((heading) (plain-list-item)))
+ '(org-format-latex-options
+   '(:foreground default :background default :scale 2.0 :html-foreground "Black" :html-background "Transparent" :html-scale 1.0 :matchers
+		 ("begin" "$1" "$" "$$" "\\(" "\\[")))
  '(package-selected-packages
-   '(typit devdocs copilot smartparens yasnippet ido-completing-read+  evil-snipe ido-mode dired-hide-dotfiles dired-open all-the-icons-dired dired-single eshell-git-prompt vterm eterm-256color rainbow-delimiters evil-nerd-commenter forge magit projectile company-box company pyvenv python-mode typescript-mode dap-mode lsp-treemacs lsp-ui lsp-mode visual-fill-column org-bullets hydra helpful which-key docker doom-modeline all-the-icons doom-themes command-log-mode evil-collection evil general no-littering auto-package-update)))
+   '(typit devdocs copilot smartparens yasnippet ido-completing-read+ evil-snipe ido-mode dired-hide-dotfiles dired-open all-the-icons-dired dired-single eshell-git-prompt vterm eterm-256color rainbow-delimiters evil-nerd-commenter forge magit projectile company-box company pyvenv python-mode typescript-mode dap-mode lsp-treemacs lsp-ui lsp-mode visual-fill-column org-bullets hydra helpful which-key docker doom-modeline all-the-icons doom-themes command-log-mode evil-collection evil general no-littering auto-package-update)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
