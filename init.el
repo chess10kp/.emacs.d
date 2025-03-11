@@ -3,6 +3,7 @@
 
 (add-to-list 'exec-path "/home/sigma/.local/share/nvim/mason/bin" )
 (add-to-list 'exec-path "/home/sigma/.ghcup/bin" )
+
 ;; make sure to add LSP_USE_PLISTS to exec-path-from-shell-variables.
 ;; (setq exec-path-from-shell-variables '("PATH" "MANPATH" "LSP_USE_PLISTS"))
 ;; (setenv "LSP_USE_PLISTS" "1")
@@ -17,6 +18,33 @@
 		    (time-subtract after-init-time before-init-time)))))
 
 (add-hook 'emacs-startup-hook #'efs/display-startup-time)
+
+(setq mode-line-format
+              '("%e" mode-line-front-space
+                (:propertize
+                 ("" mode-line-mule-info mode-line-client mode-line-modified
+                  mode-line-remote)
+                 display (min-width (5.0)))
+                mode-line-frame-identification mode-line-buffer-identification "   "
+                 
+                mode-line-misc-info mode-line-end-spaces "  " mode-line-modes))
+
+(defun goto-org-task-with-state-current ()
+  "Search all `org-agenda-files` for a task with the Org state 'CURRENT' and jump to it."
+  (interactive)
+  (let ((files (org-agenda-files))
+        found)
+    (dolist (file files)
+      (when (not found)
+        (with-current-buffer (find-file-noselect file)
+          (widen)
+          (goto-char (point-min))
+          (when (re-search-forward "^*+ +CURRENT " nil t)
+            (setq found t)
+            (org-show-entry)
+            (switch-to-buffer (current-buffer))))))
+    (unless found
+      (message "No task with state 'CURRENT' found in `org-agenda-files`."))))
 
 
 ;; Initialize package sources
@@ -75,6 +103,7 @@
 ;; Disable line numbers for some modes
 (dolist (mode '(term-mode-hook
 		shell-mode-hook
+		org-mode-hook
 		eshell-mode-hook))
   (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
@@ -111,6 +140,8 @@
   (evil-global-set-key 'normal "S" 'avy-goto-char-timer)
   (setq avy-timeout-seconds 0.02))
 
+
+
 (use-package yasnippet-snippets
   :ensure t)
 
@@ -140,6 +171,7 @@
   (evil-global-set-key 'normal  "H" 'evil-beginning-of-line)
   (evil-global-set-key 'visual  "H" 'evil-beginning-of-line)
   (evil-global-set-key 'normal  "L" 'evil-end-of-line)
+  (evil-global-set-key 'normal (kbd "<leader>mg") 'goto-org-task-with-state-current)
   (evil-global-set-key 'visual  "L" 'evil-end-of-line)
   (evil-define-key '(visual insert) 'global (kbd "C-c C-c C-v") 'clipboard-yank)
   (evil-define-key '(insert) 'global (kbd "C-c C-c C-c") 'clipboard-kill-region)
@@ -157,8 +189,10 @@
   (evil-define-key 'normal 'global (kbd "<leader>wk") 'evil-window-up)
   (evil-define-key 'normal 'global (kbd "<leader>wj") 'evil-window-down)
   (evil-define-key 'normal 'global (kbd "<leader>ww") 'evil-window-next)
-  (evil-define-key 'normal 'global (kbd "<leader>wp") 'evil-window-mru)
   (evil-define-key 'normal 'global (kbd "<leader>wc") 'evil-window-delete)
+  (evil-define-key 'normal 'global (kbd "<leader>ws") 'evil-window-split)
+  (evil-define-key 'normal 'global (kbd "<leader>tt") 'toggle-truncate-lines)
+  (evil-define-key 'normal 'global (kbd "<leader>wv") 'evil-window-vsplit)
   (evil-define-key 'visual 'global (kbd "gcc") 'comment-region)
   (evil-define-key 'visual 'global (kbd "gcu") 'uncomment-region)
   (evil-define-key 'visual 'global (kbd "<leader>ee") 'eval-region)
@@ -179,14 +213,15 @@
   (evil-set-initial-state 'es-buffer-mode 'normal)
   (evil-set-initial-state 'dashboard-mode 'normal))
 
+
+
 (use-package evil-mc
   :config
   (evil-define-key '(normal visual) 'global (kbd "<leader>mm") 'evil-mc-make-and-goto-next-match)
   (evil-define-key '(normal visual) 'global (kbd "<leader>mr") 'evil-mc-undo-all-cursors)
   (evil-define-key '(normal visual) 'global (kbd "<leader>mp") 'evil-mc-make-and-goto-prev-match)
   (evil-define-key '(normal visual) 'global (kbd "C->") 'evil-mc-skip-and-goto-next-match)
-  (evil-define-key '(normal visual) 'global (kbd "C-<") 'evil-mc-skip-and-goto-prev-match)
-  )
+  (evil-define-key '(normal visual) 'global (kbd "C-<") 'evil-mc-skip-and-goto-prev-match))
 
 (global-evil-mc-mode 1)
 (use-package expand-region
@@ -232,10 +267,6 @@
 (use-package devdocs
   :ensure t)
 
-;; typit
-(use-package typit
-  :ensure t)
-
 (use-package yasnippet
   :ensure t
   :config
@@ -264,19 +295,76 @@
 (setq org-confirm-babel-evaluate nil)
 ;; (setq org-src-window-setup 'current-window)
 
+(use-package org-alert
+  :ensure t
+  :after org
+  :config
+  (setq alert-default-style 'libnotify)
+  (setq org-alert-interval 300
+	org-alert-notify-cutoff 10
+	org-alert-notify-after-event-cutoff 5))
+
 (use-package org-modern
   :ensure t
   :after org
   :config
-  (setq org-modern-hide-stars t)
-  (setq org-indent-indentation-per-level 4) ; only when org modern is active
-  )
+  (setq org-modern-replace-stars t)
+  (with-eval-after-load 'org (global-org-modern-mode))
+  (setq
+   ;; Edit settings
+   org-auto-align-tags nil
+   org-tags-column 0
+   org-catch-invisible-edits 'show-and-error
+   org-special-ctrl-a/e t
+   org-insert-heading-respect-content nil
+   org-hide-emphasis-markers t
+   org-pretty-entities t
+
+   org-modern-todo nil
+   org-modern-priority nil
+   org-modern-todo-faces nil
+   org-modern-tag nil
+
+   org-agenda-tags-column 0)
+
+  (setq org-ellipsis "…")
+  (set-face-attribute 'org-ellipsis nil :inherit 'default :box nil)
+  (setq org-modern-hide-stars nil)
+  (setq org-modern-fold-stars '(
+			  ("○" . "○")
+			  ("●" . "●")
+			  ( "○" . "○"    )
+			  ( "●" . "●"    )
+			  ( "○" . "○"  )
+			  (  "●" . "●"  )
+			  ))
+  (setq org-indent-indentation-per-level 2))
+
+(use-package openwith
+  :ensure t
+  :config
+  (openwith-mode)
+  :after org)
+
+(use-package org-download
+  :ensure t)
 
 (use-package org-fragtog
   :ensure t
   :after org
   :config
   (add-hook 'org-mode-hook 'org-fragtog-mode))
+
+(use-package diff-hl
+  :ensure t
+  :config
+  (global-diff-hl-mode))
+
+(use-package auctex
+  :ensure t
+  :config
+  (setq Tex-auto-save t)
+  (setq Tex-parse-self t))
 
 (use-package org
   :pin org
@@ -302,7 +390,7 @@
   (require 'org-habit)
   (add-to-list 'org-modules 'org-habit)
   (setq org-habit-graph-column 60)
-  (setq org-todo-keywords '((sequence "TODO(t)" "CONFIG(C)" "NEXT(n)" "STEP(s)" "INFO(f)" "PROGRESS(i)" "CLASS(c)" "PROJ(p)" "LOOP(r)" "WAIT(w)" "EVENT(e)" "HOLD(h)" "EMAIL(m)"  "IDEA(i)" "|""DONE(d)" "KILL(k)" "[X](X)")))
+  (setq org-todo-keywords '((sequence "TODO(t)" "CURRENT(u)" "CONFIG(C)" "NEXT(n)" "STEP(s)" "INFO(f)" "PROGRESS(i)" "CLASS(c)" "PROJ(p)" "LOOP(r)" "WAIT(w)" "EVENT(e)" "HOLD(h)" "EMAIL(m)"  "IDEA(i)" "|""DONE(d)" "KILL(k)" "[X](X)")))
   (setq org-time-stamp-custom-formats '( "%H:%M>"))
   (setq org-capture-templates
 	'(("t" "Todo" entry (file+headline "~/projects/notes/todo.org" "Todos")
@@ -317,8 +405,14 @@
 	   "* CONFIG %i %? ")))
   (efs/org-font-setup)
   (add-hook 'org-mode-hook (lambda () (setq-local lsp-bridge-mode -1)))
+  (add-hook 'org-mode-hook (lambda () (toggle-truncate-lines)))
+  (add-hook 'org-mode-hook (lambda () 'visual-line-mode))
   (global-set-key  (kbd "C-c C-o")'org-roam-visit-thing)
+  ;; set blank after inserting a new heading
   (setq org-blank-before-new-entry '((heading . nil) (plain-list-item . nil)))
+  (setq org-blank-before-new-entry 
+	'((heading . auto)
+	 (plain-list-item . auto)))
 
   
 
@@ -326,20 +420,33 @@
   (evil-define-key 'normal 'global (kbd "<leader>mco") 'org-clock-out)
   (evil-define-key 'normal 'global (kbd "<leader>mcl") 'org-clock-in-last)
   (evil-define-key 'normal 'global (kbd "<leader>nts") 'org-narrow-to-subtree)
+  (evil-define-key 'normal 'global (kbd "<leader>mr") 'org-refile)
+  (evil-define-key 'normal 'global (kbd "<leader>me") 'org-set-effort)
   (evil-define-key 'normal 'global (kbd "<leader>nte") 'org-narrow-to-element)
   (evil-define-key 'normal 'global (kbd "<leader>nwi") 'widen)
   (evil-define-key 'normal 'global (kbd "<leader>mcc") 'org-capture)
   (evil-define-key 'normal 'global (kbd "<leader>moa") 'org-agenda)
   (evil-define-key 'normal 'global (kbd "<leader>ndy") 'org-roam-dailies-goto-today)
   (evil-define-key 'normal 'global (kbd "<leader>ndw") 'org-roam-dailies-goto-tomorrow)
+  (evil-define-key 'normal 'global (kbd "<leader>ml") 'org-latex-preview)
   (evil-define-key 'normal 'global (kbd "<leader>mt") 'org-todo))
 
-(use-package org-bullets
-  :hook (org-mode . org-bullets-mode)
-  :custom
-  (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
-
 (with-eval-after-load 'org
+  (evil-define-key 'normal 'org-mode-map (kbd "M-l") 'org-metaright)
+  (evil-define-key 'normal 'org-mode-map (kbd "M-h") 'org-metaleft)
+  (evil-define-key 'normal 'org-mode-map (kbd "M-k") 'org-metaup)
+  (evil-define-key 'normal 'org-mode-map (kbd "M-j") 'org-metadown)
+
+  (evil-define-key 'normal 'org-mode-map (kbd "M-L") 'org-shiftmetaright)
+  (evil-define-key 'normal 'org-mode-map (kbd "M-H") 'org-shiftmetaleft)
+  (evil-define-key 'normal 'org-mode-map (kbd "M-K") 'org-shiftmetaup)
+  (evil-define-key 'normal 'org-mode-map (kbd "M-J") 'org-shiftmetadown)
+  
+  (evil-define-key 'normal 'org-mode-map (kbd "L") 'org-shiftright)
+  (evil-define-key 'normal 'org-mode-map (kbd "H") 'org-shiftleft)
+  (evil-define-key 'normal 'org-mode-map (kbd "K") 'org-shiftup)
+  (evil-define-key 'normal 'org-mode-map (kbd "J") 'org-shiftdown)
+
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((python . t)))
@@ -351,11 +458,6 @@
   (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
   (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
   (add-to-list 'org-structure-template-alist '("py" . "src python")))
-
-;; (use-package persp-mode
-;;   :ensure t
-;;   :config
-;;   (persp-mode))
 
 (use-package org-roam
   :config
@@ -618,6 +720,7 @@
 (evil-global-set-key 'normal  (kbd "<leader>fw"  )'consult-ripgrep)
 (evil-global-set-key 'normal  (kbd "<leader>fd"  )'consult-find)
 
+
 (use-package embark
   :ensure t
   :bind
@@ -705,19 +808,6 @@
   (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
 
 
-;; lsp-bridge
-;; (add-to-list 'load-path "~/.emacs.d/lsp-bridge")
-;; (require 'lsp-bridge)
-;; (global-lsp-bridge-mode)
-;; (setq lsp-bridge-enable-hover-diagnostic t)
-;; (setq acm-menu-length 5)
-;; (evil-define-key 'visual 'global (kbd "<leader>lr") 'lsp-bridge-find-references)
-;; (evil-define-key 'normal 'global (kbd "g]") 'lsp-bridge-diagnostic-jump-next)
-;; (evil-define-key 'normal 'global (kbd "g[") 'lsp-bridge-diagnostic-jump-prev)
-;; (evil-define-key 'normal 'global (kbd "M-[") 'lsp-bridge-find-def)
-;; (evil-define-key 'normal 'global (kbd "M-]") 'lsp-bridge-find-impl)
-;; (evil-define-key 'normal 'global (kbd "gr") 'lsp-bridge-rename)
-
 ;; haskell-mode
 (setq haskell-interactive-popup-errors nil)
 (defun hly/evil-open-below (count)
@@ -762,71 +852,6 @@ Doesn’t work on the first line of a file.
 (add-hook 'haskell-mode-hook (lambda () (global-unset-key (kbd "<tab>"))))
 
 
-;; ; START tsx
-(use-package treesit
-  :disabled t
-  :ensure nil
-  :mode (
-	 ("\\.json\\'" .  json-ts-mode)
-	 ("\\.Dockerfile\\'" . dockerfile-ts-mode)
-	 ("\\.prisma\\'" . prisma-ts-mode)
-	 ;; More modes defined here...
-	 )
-  :preface
-  (defun os/setup-install-grammars ()
-    "Install Tree-sitter grammars if they are absent."
-    (interactive)
-    (dolist (grammar
-	     '((css . ("https://github.com/tree-sitter/tree-sitter-css" "v0.20.0"))
-	       (bash "https://github.com/tree-sitter/tree-sitter-bash")
-	       (html . ("https://github.com/tree-sitter/tree-sitter-html" "v0.20.1"))
-	       (javascript . ("https://github.com/tree-sitter/tree-sitter-javascript" "v0.21.2" "src"))
-	       (json . ("https://github.com/tree-sitter/tree-sitter-json" "v0.20.2"))
-	       (python . ("https://github.com/tree-sitter/tree-sitter-python" "v0.20.4"))
-	       (go "https://github.com/tree-sitter/tree-sitter-go" "v0.20.0")
-	       (markdown "https://github.com/ikatyang/tree-sitter-markdown")
-	       (make "https://github.com/alemuller/tree-sitter-make")
-	       (elisp "https://github.com/Wilfred/tree-sitter-elisp")
-	       (cmake "https://github.com/uyha/tree-sitter-cmake")
-	       (haskell "https://github.com/tree-sitter/tree-sitter-haskell" "master" "src" nil nil)
-	       (c "https://github.com/tree-sitter/tree-sitter-c")
-	       (elisp . ("https://github.com/Wilfred/tree-sitter-elisp"))
-	       (elixir "https://github.com/elixir-lang/tree-sitter-elixir" "main" "src" nil nil)
-	       (go . ("https://github.com/tree-sitter/tree-sitter-go"))
-	       (gomod      . ("https://github.com/camdencheek/tree-sitter-go-mod.git"))
-	       (cpp "https://github.com/tree-sitter/tree-sitter-cpp")
-	       (toml "https://github.com/tree-sitter/tree-sitter-toml")
-	       (yaml . ("https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0"))
-	       (prisma "https://github.com/victorhqc/tree-sitter-prisma")))
-      (add-to-list 'treesit-language-source-alist grammar)
-      ;; Only install `grammar' if we don't already have it
-      ;; installed. However, if you want to *update* a grammar then
-      ;; this obviously prevents that from happening.
-      (unless (treesit-language-available-p (car grammar))
-	(treesit-install-language-grammar (car grammar)))))
-
-      ;; Optional, but recommended. Tree-sitter enabled major modes are
-      ;; distinct from their ordinary counterparts.
-      ;;
-      ;; You can remap major modes with `major-mode-remap-alist'. Note
-      ;; that this does *not* extend to hooks! Make sure you migrate them
-      ;; also
-      (dolist (mapping
-	       '((python-mode . python-ts-mode)
-		 (css-mode . css-ts-mode)
-		 (c-mode . c-ts-mode)
-		 (c++-mode . c++-ts-mode)
-		 (c-or-c++-mode . c-or-c++-ts-mode)
-		 (bash-mode . bash-ts-mode)
-		 (css-mode . css-ts-mode)
-		 (json-mode . json-ts-mode)
-		 (js-json-mode . json-ts-mode)
-		 (sh-mode . bash-ts-mode)
-		 (sh-base-mode . bash-ts-mode)))
-	(add-to-list 'major-mode-remap-alist mapping))
-      :config
-      (os/setup-install-grammars))
-
     ;;;; Code Completion
 (use-package corfu
   :ensure t
@@ -862,155 +887,7 @@ Doesn’t work on the first line of a file.
               (corfu-mode))
             nil
             t))
-(use-package web-mode)
-(add-to-list 'auto-mode-alist '("\\.jsx?$" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.tsx?$" . web-mode))
-(setq web-mode-content-types-alist '(("jsx" . "\\.js[x]?\\'")))
 
-
-(use-package lsp-pyright
-  :ensure t
-  :custom (lsp-pyright-langserver-command "basedpyright") ;; or basedpyright
-  :hook (python-mode . (lambda ()
-                          (require 'lsp-pyright)
-                          (lsp))))  ; or lsp-deferred
-
-
-(use-package lsp-mode
-  :diminish "LSP"
-  :ensure t
-  :defer
-  :hook ((python-mode . lsp-deferred)
-	 (lsp-mode . lsp-diagnostics-mode)
-	 (lsp-mode . lsp-enable-which-key-integration)
-	 ((tsx-ts-mode
-	   typescript-mode
-	   js-mode
-	   typescript-ts-mode
-	   js-ts-mode) . lsp-deferred))
-  :custom
-  (lsp-keymap-prefix "C-c l")           ; Prefix for LSP actions
-  (lsp-completion-provider :none)       ; Using Corfu as the provider
-  (lsp-diagnostics-provider :flycheck)
-  (lsp-session-file (locate-user-emacs-file ".lsp-session"))
-  (lsp-log-io nil)                      ; IMPORTANT! Use only for debugging! Drastically affects performance
-  (lsp-keep-workspace-alive nil)        ; Close LSP server if all project buffers are closed
-  (lsp-idle-delay 0.5)                  ; Debounce timer for `after-change-function'
-  ;; core
-  (lsp-enable-xref t)                   ; Use xref to find references
-  (lsp-auto-configure t)                ; Used to decide between current active servers
-  (lsp-eldoc-enable-hover t)            ; Display signature information in the echo area
-  (lsp-enable-dap-auto-configure t)     ; Debug support
-  (lsp-enable-file-watchers nil)
-  (lsp-enable-folding nil)              ; I disable folding since I use origami
-  (lsp-enable-imenu t)
-  (lsp-enable-indentation nil)          ; I use prettier
-  (lsp-enable-links nil)                ; No need since we have `browse-url'
-  (lsp-enable-on-type-formatting nil)   ; Prettier handles this
-  (lsp-enable-suggest-server-download t) ; Useful prompt to download LSP providers
-  (lsp-enable-symbol-highlighting t)     ; Shows usages of symbol at point in the current buffer
-  (lsp-enable-text-document-color nil)   ; This is Treesitter's job
-
-  (lsp-ui-sideline-show-hover nil)      ; Sideline used only for diagnostics
-  (lsp-ui-sideline-diagnostic-max-lines 20) ; 20 lines since typescript errors can be quite big
-  ;; completion
-  (lsp-completion-enable t)
-  (lsp-completion-enable-additional-text-edit t) ; Ex: auto-insert an import for a completion candidate
-  (lsp-enable-snippet t)                         ; Important to provide full JSX completion
-  (lsp-completion-show-kind t)                   ; Optional
-  ;; headerline
-  (lsp-headerline-breadcrumb-enable t)  ; Optional, I like the breadcrumbs
-  (lsp-headerline-breadcrumb-enable-diagnostics nil) ; Don't make them red, too noisy
-  (lsp-headerline-breadcrumb-enable-symbol-numbers nil)
-  (lsp-headerline-breadcrumb-icons-enable nil)
-  ;; modeline
-  (lsp-modeline-code-actions-enable nil) ; Modeline should be relatively clean
-  (lsp-modeline-diagnostics-enable nil)  ; Already supported through `flycheck'
-  (lsp-modeline-workspace-status-enable nil) ; Modeline displays "LSP" when lsp-mode is enabled
-  (lsp-signature-doc-lines 1)                ; Don't raise the echo area. It's distracting
-  (lsp-ui-doc-use-childframe t)              ; Show docs for symbol at point
-  (lsp-eldoc-render-all nil)            ; This would be very useful if it would respect `lsp-signature-doc-lines', currently it's distracting
-  ;; lens
-  (lsp-lens-enable nil)                 ; Optional, I don't need it
-  ;; semantic
-  (lsp-semantic-tokens-enable nil)      ; Related to highlighting, and we defer to treesitter
-
-  :init
-  (setq lsp-use-plists t))
-
-(add-hook 'emacs-lisp-mode-hook (lambda () (setq-local lsp-mode -1)))
-(add-hook 'haskell-mode-hook (lambda () (setq-local lsp-mode -1)))
-
-;; (use-package typescript-mode
-;;   :ensure t
-;;   :mode "\\.tsx\\'"
-;;   :hook (typescript-mode . lsp-deferred))
-
-
-
-;; (use-package lsp-ui
-;;   :ensure t
-;;   :commands
-;;   (lsp-ui-doc-show
-;;    lsp-ui-doc-glance)
-;;   :bind (:map lsp-mode-map
-;;	      ("C-c C-d" . 'lsp-ui-doc-glance))
-;;   :after (lsp-mode evil)
-;;   :config (setq lsp-ui-doc-enable t
-;;		evil-lookup-func #'lsp-ui-doc-glance ; Makes K in evil-mode toggle the doc for symbol at point
-;;		lsp-ui-doc-show-with-cursor nil      ; Don't show doc when cursor is over symbol - too distracting
-;;		lsp-ui-doc-include-signature t       ; Show signature
-;;		lsp-ui-doc-position 'at-point)
-;;   ;; add hook to disable lsp-mode in emacs-lisp mode and haskell-mode
-;;   )
-
-;; (use-package flycheck
-;;   :ensure t
-;;   :init (global-flycheck-mode)
-;;   :bind (:map flycheck-mode-map
-;;	      ("M-N" . flycheck-next-error) ; optional but recommended error navigation
-;;	      ("M-P" . flycheck-previous-error)))
-;; (setq-default flycheck-disabled-checkers
-;;               (append flycheck-disabled-checkers
-;;                       '(javascript-jshint json-jsonlist)))
-;; ;; Enable eslint checker for web-mode
-;; (flycheck-add-mode 'javascript-eslint 'web-mode)
-;; ;; Enable flycheck globally
-;; (add-hook 'after-init-hook #'global-flycheck-mode)
-;; (use-package add-node-modules-path)
-;; (add-hook 'flycheck-mode-hook 'add-node-modules-path)
-;; (use-package prettier-js)
-;; (use-package emmet-mode)
-;; (add-hook 'web-mode-hook 'emmet-mode)
-;; (defun web-mode-init-prettier-hook ()
-;;   (add-node-modules-path)
-;;   (prettier-js-mode))
-
-;; (add-hook 'web-mode-hook  'web-mode-init-prettier-hook)
-;; (use-package lsp-tailwindcss
-;;   :straight '(lsp-tailwindcss :type git :host github :repo "merrickluo/lsp-tailwindcss")
-;;   :init (setq lsp-tailwindcss-add-on-mode t)
-;;   :config
-;;   (dolist (tw-major-mode
-;;	   '(css-mode
-;;	     css-ts-mode
-;;	     typescript-mode
-;;	     typescript-ts-mode
-;;	     tsx-ts-mode
-;;	     js2-mode
-;;	     js-ts-mode
-;;	     clojure-mode))
-;;     (add-to-list 'lsp-tailwindcss-major-modes tw-major-mode)))
-;; (setq read-process-output-max (* 10 1024 1024)) ;; 10mb
-;; (setenv "LSP_USE_PLISTS" "true") ;; in early-init.el
-;; (setq gc-cons-threshold 200000000)
-;; ;; (use-package lsp-typescript)
-;; (setq lsp-response-timeout 30)
-;; (setq lsp-clients-typescript-tsserver "~/.local/share/nvim/mason/bin/typescript-language-server")
-;; ; END tsx
-
-(use-package pyvenv
-  :ensure t)
 
 (use-package copilot
   :straight (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
@@ -1044,7 +921,6 @@ Doesn’t work on the first line of a file.
   :defer
   :commands vterm
   :config
-  (evil-define-key 'normal 'global-map (kbd "C-x M-h") 'vterm)
   (evil-define-key 'normal 'global-map (kbd "M-h") 'chess/check-if-vterm-is-visible)
   (setq term-prompt-regexp "^[^#$%>\n]*[#$%>] *")  ;; Set this to match your custom shell prompt
   ;;(setq vterm-shell "zsh")                       ;; Set this to customize the shell to launch
@@ -1053,20 +929,6 @@ Doesn’t work on the first line of a file.
 (when (eq system-type 'windows-nt)
   (setq explicit-shell-file-name "powershell.exe")
   (setq explicit-powershell.exe-args '()))
-
-(defun efs/configure-eshell ()
-  ;; Save command history when commands are entered
-  (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
-
-  ;; Truncate buffer for performance
-  (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
-
-  ;; Bind some useful keys for evil-mode
-  (evil-normalize-keymaps)
-  (setq eshell-history-size         10000
-	eshell-buffer-maximum-lines 10000
-	eshell-hist-ignoredups t
-	eshell-scroll-to-bottom-on-input t))
 
 (use-package dired
   :ensure nil
@@ -1077,8 +939,7 @@ Doesn’t work on the first line of a file.
   (evil-collection-define-key 'normal 'dired-mode-map
     "h" 'dired-single-up-directory
     "l" 'dired-single-buffer)
-  (setq dired-dwim-target t)
-  )
+  (setq dired-dwim-target t))
 
 (use-package dired-single
   :commands (dired dired-jump))
@@ -1097,12 +958,6 @@ Doesn’t work on the first line of a file.
   (interactive "sSearch: ")
   (eww (format "https://en.wikipedia.org/w/index.php?search=%s" query)))
 
-;; fonts and line spacing
-(set-face-attribute 'default nil :font "Iosevka Comfy")
-(set-face-attribute 'fixed-pitch nil :font "Iosevka Comfy")
-(set-face-attribute 'variable-pitch nil :font "Iosevka Comfy")
-(setq-default line-spacing nil)
-(global-display-line-numbers-mode t)
 
 (setq-default display-line-numbers 'relative)
 (setq display-line-numbers-type 'relative) ;; this is the thing that actually sets the relative line numbers lmao
@@ -1137,6 +992,13 @@ A single-digit prefix argument gives the top window arg*10%."
 ;; Make gc pauses faster by decreasing the threshold.
 (setq gc-cons-threshold (* 8 1000 1000))
 
+;; fonts and line spacing
+(set-face-attribute 'default nil :font "azuki_font" )
+(set-face-attribute 'fixed-pitch nil :font "azuki_font")
+(set-face-attribute 'variable-pitch nil :font "azuki_font")
+(setq-default line-spacing nil)
+(global-display-line-numbers-mode t)
+(add-to-list 'default-frame-alist '(font . "Iosevka Comfy"))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -1144,14 +1006,23 @@ A single-digit prefix argument gives the top window arg*10%."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("9d29a302302cce971d988eb51bd17c1d2be6cd68305710446f658958c0640f68" "81f53ee9ddd3f8559f94c127c9327d578e264c574cda7c6d9daddaec226f87bb" "9f297216c88ca3f47e5f10f8bd884ab24ac5bc9d884f0f23589b0a46a608fe14" "4ade6b630ba8cbab10703b27fd05bb43aaf8a3e5ba8c2dc1ea4a2de5f8d45882" "88f7ee5594021c60a4a6a1c275614103de8c1435d6d08cc58882f920e0cec65e" "691d671429fa6c6d73098fc6ff05d4a14a323ea0a18787daeb93fde0e48ab18b" "e9d2cfe6cdb1ed56d4f886e01c67ffa88aedb315ce7ea795ccdc34f15e01e09b" "b5fd9c7429d52190235f2383e47d340d7ff769f141cd8f9e7a4629a81abc6b19" "8d3ef5ff6273f2a552152c7febc40eabca26bae05bd12bc85062e2dc224cde9a" "48042425e84cd92184837e01d0b4fe9f912d875c43021c3bcb7eeb51f1be5710" default))
+   '("d6b934330450d9de1112cbb7617eaf929244d192c4ffb1b9e6b63ad574784aad" "019184a760d9747744783826fcdb1572f9efefc5c19ed43b6243e66638fb9960" "01a9797244146bbae39b18ef37e6f2ca5bebded90d9fe3a2f342a9e863aaa4fd" "6e18353d35efc18952c57d3c7ef966cad563dc65a2bba0660b951d990e23fc07" "113a135eb7a2ace6d9801469324f9f7624f8c696b72e3709feb7368b06ddaccc" "9d29a302302cce971d988eb51bd17c1d2be6cd68305710446f658958c0640f68" "81f53ee9ddd3f8559f94c127c9327d578e264c574cda7c6d9daddaec226f87bb" "9f297216c88ca3f47e5f10f8bd884ab24ac5bc9d884f0f23589b0a46a608fe14" "4ade6b630ba8cbab10703b27fd05bb43aaf8a3e5ba8c2dc1ea4a2de5f8d45882" "88f7ee5594021c60a4a6a1c275614103de8c1435d6d08cc58882f920e0cec65e" "691d671429fa6c6d73098fc6ff05d4a14a323ea0a18787daeb93fde0e48ab18b" "e9d2cfe6cdb1ed56d4f886e01c67ffa88aedb315ce7ea795ccdc34f15e01e09b" "b5fd9c7429d52190235f2383e47d340d7ff769f141cd8f9e7a4629a81abc6b19" "8d3ef5ff6273f2a552152c7febc40eabca26bae05bd12bc85062e2dc224cde9a" "48042425e84cd92184837e01d0b4fe9f912d875c43021c3bcb7eeb51f1be5710" default))
  '(elcord-refresh-rate 60)
  '(global-display-line-numbers-mode t)
+ '(openwith-associations
+   '(("\\.pdf\\'" "zathura"
+      (file))
+     ("\\.mp3\\'" "mpv"
+      (file))
+     ("\\.\\(?:mpe?g\\|avi\\|wmv\\)\\'" "mpv"
+      (file))
+     ("\\.pptx\\'" "libreoffice"
+      (file))))
  '(org-agenda-files
    '("/home/sigma/projects/notes/todo.org" "/home/sigma/projects/notes/org/process/leetcode/59MaximumSubarray.org" "/home/sigma/projects/notes/org/process/blizzard.org" "/home/sigma/projects/notes/org/process/chessjkl.org" "/home/sigma/projects/notes/org/process/convas.org" "/home/sigma/projects/notes/org/process/displway.org" "/home/sigma/projects/notes/org/process/gitgraft.org" "/home/sigma/projects/notes/org/process/leetcode.org" "/home/sigma/projects/notes/org/process/ortizbot.org" "/home/sigma/projects/notes/org/process/portfolio.org" "/home/sigma/projects/notes/org/process/snip.org" "/home/sigma/projects/notes/org/process/socraticoin.org" "/home/sigma/projects/notes/org/journal.org" "/home/sigma/projects/notes/org/notes.org" "/home/sigma/projects/notes/org/projects.org" "/home/sigma/projects/notes/org/umd.org"))
  '(org-blank-before-new-entry '((heading) (plain-list-item)))
  '(org-format-latex-options
-   '(:foreground default :background default :scale 2.0 :html-foreground "Black" :html-background "Transparent" :html-scale 1.0 :matchers
+   '(:foreground default :background default :scale 2.5 :html-foreground "Black" :html-background "Transparent" :html-scale 1.0 :matchers
 		 ("begin" "$1" "$" "$$" "\\(" "\\[")))
  '(package-selected-packages
    '(typit devdocs copilot smartparens yasnippet ido-completing-read+ evil-snipe ido-mode dired-hide-dotfiles dired-open all-the-icons-dired dired-single eshell-git-prompt vterm eterm-256color rainbow-delimiters evil-nerd-commenter forge magit projectile company-box company pyvenv python-mode typescript-mode dap-mode lsp-treemacs lsp-ui lsp-mode visual-fill-column org-bullets hydra helpful which-key docker doom-modeline all-the-icons doom-themes command-log-mode evil-collection evil general no-littering auto-package-update)))
@@ -1162,3 +1033,4 @@ A single-digit prefix argument gives the top window arg*10%."
  ;; If there is more than one, they won't work right.
  )
 (put 'narrow-to-region 'disabled nil)
+(put 'dired-find-alternate-file 'disabled nil)
