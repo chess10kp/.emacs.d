@@ -531,10 +531,10 @@
   (evil-global-set-key 'normal  (kbd "<leader>fd"  )'consult-find)
 
   :custom
-  (setq vertico-resize t)
+  (setq-default vertico-resize t)
   (vertico-cycle t) 
   :config
-  (setq vertico-multiform-commands
+  (setq-default vertico-multiform-commands
 	'(
 	  (consult-grep buffer)
 	  (imenu flat)
@@ -578,7 +578,7 @@
   (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
 
   ;; Do not allow the cursor in the minibuffer prompt
-  (setq minibuffer-prompt-properties
+  (setq-default minibuffer-prompt-properties
 	'(read-only t cursor-intangible t face minibuffer-prompt))
   (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode))
 
@@ -591,7 +591,7 @@
   (completion-styles '(basic))
   (completion-category-defaults nil)
   (completion-category-overrides '((file (styles partial-completion)))))
-(setq completion-styles '(basic substring partial-completion flex))
+(setq completion-styles '(orderless basic substring partial-completion flex))
 (setq read-file-name-completion-ignore-case t
       read-buffer-completion-ignore-case t
       completion-ignore-case t)
