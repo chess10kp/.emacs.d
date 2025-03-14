@@ -49,7 +49,31 @@
 (package-initialize)
 (unless package-archive-contents)
 ;; set the browse url function to firefox
-(setq browse-url-browser-function 'browse-url-firefox)
+;; (setq browse-url-browser-function 'browse-url-firefox)
+
+(defun browse-url-zen (url &optional new-window)
+  "Ask the Zen WWW browser to load URL.
+Defaults to the URL around or before point.
+
+Non-interactively, this uses the optional second argument NEW-WINDOW
+instead of `browse-url-new-window-flag'."
+  (interactive (browse-url-interactive-arg "URL: "))
+  (setq url (browse-url-encode-url url))
+  (let* ((process-environment (browse-url-process-environment)))
+    (apply #'start-process
+           (concat "firefox " url) nil
+           browse-url-firefox-program
+           (append
+            (list url)))))
+
+(defun browse-url-zen (url &optional kwargs)
+  (interactive (browse-url-interactive-arg "URL: "))
+  (setq url (browse-url-encode-url url))
+  (let* ((process-environment (browse-url-process-environment)))
+    (apply #'start-process (concat "zen " url) nil "zen-bin" (list url))))
+
+(setq-default browse-url-browser-function '(lambda (url) (browse-url-zen url)))
+
 (setq dired-kill-when-opening-new-dired-buffer t)
 
 ;; Initialize use-package on non-Linux platforms
