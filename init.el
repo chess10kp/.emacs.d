@@ -11,16 +11,6 @@
 
 (setq-default compilation-ask-about-save nil)
 
-(defun efs/display-startup-time ()
-  (message "Emacs loaded in %s"
-	   (format "%.2f seconds"
-		   (float-time
-		    (time-subtract after-init-time before-init-time)))))
-
-(add-hook 'emacs-startup-hook #'efs/display-startup-time)
-
-
-
 (defun goto-org-task-with-state-current ()
   "Search all `org-agenda-files` for a task with the Org state 'CURRENT' and jump to it."
   (interactive)
@@ -66,6 +56,8 @@ instead of `browse-url-new-window-flag'."
            (append
             (list url)))))
 
+
+
 (defun browse-url-zen (url &optional kwargs)
   (interactive (browse-url-interactive-arg "URL: "))
   (setq url (browse-url-encode-url url))
@@ -73,8 +65,6 @@ instead of `browse-url-new-window-flag'."
     (apply #'start-process (concat "zen " url) nil "zen-bin" (list url))))
 
 (setq-default browse-url-browser-function '(lambda (url) (browse-url-zen url)))
-
-(setq dired-kill-when-opening-new-dired-buffer t)
 
 ;; Initialize use-package on non-Linux platforms
 (unless (package-installed-p 'use-package)
@@ -229,7 +219,7 @@ instead of `browse-url-new-window-flag'."
 
   (evil-global-set-key 'visual (kbd "gcc") 'comment-region)
   (evil-global-set-key 'visual (kbd "gcu") 'uncomment-region)
-  (evil-global-set-key 'visual (kbd "<leader>ee") 'eval-region)
+  (evil-global-set-key 'visual (kbd "<leader>ee") #'(lambda () (interactive ) (progn ( eval-region (region-beginning) (region-end) ) (message "(region evaluated)")))) 
 
   (evil-define-key '(visual insert) 'global (kbd "C-c C-c C-v") 'clipboard-yank)
   (evil-define-key '(insert) 'global (kbd "C-c C-c C-c") 'clipboard-kill-region)
@@ -569,7 +559,6 @@ instead of `browse-url-new-window-flag'."
 	  (execute-extended-command flat)
 	  (consult-buffer flat)))
 
-  ;; enable vertico-mode
   :init
   (vertico-multiform-mode)
   (vertico-mode))
@@ -580,7 +569,6 @@ instead of `browse-url-new-window-flag'."
   :init
   (savehist-mode))
 
-;; A few more useful configurations...
 (use-package emacs
   :custom
   ;; Support opening new minibuffers from inside existing minibuffers.
@@ -631,21 +619,12 @@ instead of `browse-url-new-window-flag'."
   ;; Tidy shadowed file names
   :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
 
-;; Enable rich annotations using the Marginalia package
-
 (use-package marginalia
-  ;; Bind `marginalia-cycle' locally in the minibuffer.  To make the binding
-  ;; available in the *Completions* buffer, add it to the
   ;; `completion-list-mode-map'.
   :bind (:map minibuffer-local-map
 	 ("M-A" . marginalia-cycle))
 
-  ;; The :init section is always executed.
   :init
-
-  ;; Marginalia must be activated in the :init section of use-package such that
-  ;; the mode gets enabled right away. Note that this forces loading the
-  ;; package.
   (marginalia-mode))
 
 (use-package flyspell
@@ -660,9 +639,7 @@ instead of `browse-url-new-window-flag'."
   :bind (("C-;" . flyspell-auto-correct-previous-word)
          ("<f7>" . flyspell-correct-wrapper)))
 
-;; Example configuration for Consult
 (use-package consult
-  ;; Replace bindings. Lazily loaded by `use-package'.
   :bind (;; C-c bindings in `mode-specific-map'
 	 ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
 	 ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
@@ -684,15 +661,9 @@ instead of `browse-url-new-window-flag'."
 	 ;; M-s bindings in `search-map'
 )                ;; orig. previous-matching-history-element
 
-  ;; Enable automatic preview at point in the *Completions* buffer. This is
-  ;; relevant when you use the default completion UI.
   :hook (completion-list-mode . consult-preview-at-point-mode)
 
-  ;; The :init configuration is always executed (Not lazy)
   :init
-  ;; Optionally configure the register formatting. This improves the register
-  ;; preview for `consult-register', `consult-register-load',
-  ;; `consult-register-store' and the Emacs built-ins.
   (setq register-preview-delay 0.5
 	register-preview-function #'consult-register-format)
 
@@ -935,6 +906,8 @@ instead of `browse-url-new-window-flag'."
   :bind (("C-x C-j" . dired-jump))
   :custom ((dired-listing-switches "-agho --group-directories-first"))
   :config
+  (setq-default dired-kill-when-opening-new-dired-buffer t)
+
   (evil-collection-define-key 'normal 'dired-mode-map
     "h" 'dired-single-up-directory
     "l" 'dired-single-buffer)
@@ -963,7 +936,26 @@ instead of `browse-url-new-window-flag'."
 (global-display-line-numbers-mode t)
 (fset 'yes-or-no-p 'y-or-n-p)
 
-;; use splitright for window splits
+;;;  buffer display rules 
+(setq display-buffer-alist
+      '(
+	("\\*compilation\\*"
+	 (display-buffer-reuse-mode-window display-buffer-below-selected)
+	 (dedicated . t)
+	 (window-height . 10))
+	("\\*\\(Warnings\\|Compile-log\\)\\*"
+	 (display-buffer-no-window))
+	("\\*Help\\*"
+	 (display-buffer-below-selected)
+	 (body-function . (lambda (window) (select-window window)))
+	 (dedicated . t)
+	 (window-height . 15)
+	 )))
+
+;; If you want `switch-to-buffer' and related to respect those rules
+(setq switch-to-buffer-obey-display-actions t)
+(setq switch-to-buffer-in-dedicated-window 'pop)
+
 (setq split-height-threshold 120)
 (setq split-width-threshold 160)
 
