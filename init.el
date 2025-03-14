@@ -201,6 +201,7 @@
   (evil-global-set-key 'normal (kbd "<leader>cc") 'recompile)
   (evil-global-set-key 'normal (kbd "<leader>cC") 'compile)
   (evil-global-set-key 'normal (kbd "C-x C-m") 'chess/select-music)
+  (evil-global-set-key 'normal  (kbd "<leader>ff"  )'find-file)
 
   (evil-global-set-key 'visual (kbd "gcc") 'comment-region)
   (evil-global-set-key 'visual (kbd "gcu") 'uncomment-region)
@@ -345,15 +346,14 @@
 			  ))
   (setq org-indent-indentation-per-level 2))
 
+;; open pdfs with zathura
 (use-package openwith
   :ensure t
   :config
   (openwith-mode)
   :after org)
 
-(use-package org-download
-  :ensure t)
-
+;; faster latex fragments toggle 
 (use-package org-fragtog
   :ensure t
   :after org
@@ -371,6 +371,7 @@
   (setq Tex-auto-save t)
   (setq Tex-parse-self t))
 
+;; automatically install ts parsers
 (use-package treesit-auto
   :ensure t
   :demand t
@@ -415,31 +416,24 @@
 	  ("c" "Config" entry (file+headline "~/projects/notes/config.org" "Configuration")
 	   "* CONFIG %i %? ")))
   (efs/org-font-setup)
-  (add-hook 'org-mode-hook (lambda () (setq-local lsp-bridge-mode -1)))
   (add-hook 'org-mode-hook (lambda () (toggle-truncate-lines)))
   (add-hook 'org-mode-hook (lambda () 'visual-line-mode))
-  (global-set-key  (kbd "C-c C-o")'org-roam-visit-thing)
   ;; set blank after inserting a new heading
   (setq org-blank-before-new-entry '((heading . nil) (plain-list-item . nil)))
   (setq org-blank-before-new-entry 
 	'((heading . auto)
 	 (plain-list-item . auto)))
-
-  
-
-  (evil-define-key 'normal 'global (kbd "<leader>mci") 'org-clock-in)
-  (evil-define-key 'normal 'global (kbd "<leader>mco") 'org-clock-out)
-  (evil-define-key 'normal 'global (kbd "<leader>mcl") 'org-clock-in-last)
-  (evil-define-key 'normal 'global (kbd "<leader>mr") 'org-refile)
-  (evil-define-key 'normal 'global (kbd "<leader>me") 'org-set-effort)
-  (evil-define-key 'normal 'global (kbd "<leader>mcc") 'org-capture)
-  (evil-define-key 'normal 'global (kbd "<leader>moa") 'org-agenda)
-  (evil-define-key 'normal 'global (kbd "<leader>ndy") 'org-roam-dailies-goto-today)
-  (evil-define-key 'normal 'global (kbd "<leader>ndw") 'org-roam-dailies-goto-tomorrow)
-  )
+  (evil-global-set-key 'normal (kbd "<leader>mci") 'org-clock-in)
+  (evil-global-set-key 'normal (kbd "<leader>mco") 'org-clock-out)
+  (evil-global-set-key 'normal (kbd "<leader>mcl") 'org-clock-in-last)
+  (evil-global-set-key 'normal (kbd "<leader>mr") 'org-refile)
+  (evil-global-set-key 'normal (kbd "<leader>me") 'org-set-effort)
+  (evil-global-set-key 'normal (kbd "<leader>mcc") 'org-capture)
+  (evil-global-set-key 'normal (kbd "<leader>moa") 'org-agenda)
+  (evil-global-set-key 'normal (kbd "<leader>ndy") 'org-roam-dailies-goto-today)
+  (evil-global-set-key 'normal (kbd "<leader>ndw") 'org-roam-dailies-goto-tomorrow))
 
 (defun chess/org-mode-maps ()
-
   (evil-local-set-key 'normal  (kbd "<leader>nts") 'org-narrow-to-subtree)
   (evil-local-set-key 'normal  (kbd "<leader>nte") 'org-narrow-to-element)
   (evil-local-set-key 'normal  (kbd "<leader>nwi") 'widen)
@@ -477,12 +471,11 @@
 (use-package org-roam
   :config
   (setq org-roam-directory "~/projects/notes")
-  (global-set-key (kbd "C-c n r f") 'org-roam-node-find )
-  (global-set-key (kbd "C-c n r i") 'org-roam-node-insert)
   (add-hook 'org-roam-mode #'org-roam-db-autosync-mode)
-  (evil-define-key 'normal 'global (kbd "<leader>nrf") 'org-roam-node-find)
-  (evil-define-key 'normal 'global (kbd "<leader>nri") 'org-roam-node-insert)
-(evil-define-key 'insert 'global (kbd "<M-n><M-i>") 'org-roam-node-insert))
+  (evil-define-key 'normal 'global (kbd "<leader>nrf") #'org-roam-node-find)
+  (evil-define-key 'normal 'global (kbd "<leader>nri") #'org-roam-node-insert)
+  (evil-define-key 'normal 'org-roam-mode-map (kbd "<C-c><C-o>") #'org-roam-buffer-visit-thing)
+)
 
 
 (setq gdb-many-windows nil)
@@ -530,11 +523,16 @@
 
 (use-package vertico
   :ensure t 
+  :after evil
+  :config
+  (evil-global-set-key 'normal  (kbd "<leader>fb"  )'consult-buffer)
+  (evil-global-set-key 'normal  (kbd "<leader>fw"  )'consult-ripgrep)
+  (evil-global-set-key 'normal  (kbd "<leader>fl"  )'consult-line-multi)
+  (evil-global-set-key 'normal  (kbd "<leader>fd"  )'consult-find)
+
   :custom
-  ;; (vertico-scroll-margin 0) ;; Different scroll margin
-  ;; (vertico-count 20) ;; Show more candidates
-  (setq vertico-resize t) ;; Grow and shrink the Vertico minibuffer
-  (vertico-cycle t) ;; Enable cycling for `vertico-next/previous'
+  (setq vertico-resize t)
+  (vertico-cycle t) 
   :config
   (setq vertico-multiform-commands
 	'(
@@ -642,13 +640,6 @@
 (use-package consult
   ;; Replace bindings. Lazily loaded by `use-package'.
   :bind (;; C-c bindings in `mode-specific-map'
-	 ("C-c M-x" . consult-mode-command)
-	 ("C-c h" . consult-history)
-	 ("C-c k" . consult-kmacro)
-	 ("C-c m" . consult-man)
-	 ("C-c i" . consult-info)
-	 ([remap Info-search] . consult-info)
-	 ;; C-x bindings in `ctl-x-map'
 	 ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
 	 ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
 	 ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
@@ -656,43 +647,18 @@
 	 ("C-x t b" . consult-buffer-other-tab)    ;; orig. switch-to-buffer-other-tab
 	 ("C-x r b" . consult-bookmark)            ;; orig. bookmark-jump
 	 ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
-	 ;; Custom M-# bindings for fast register access
-	 ("M-#" . consult-register-load)
-	 ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
-	 ("C-M-#" . consult-register)
 	 ;; Other custom bindings
 	 ("M-y" . consult-yank-pop)                ;; orig. yank-pop
 	 ;; M-g bindings in `goto-map'
 	 ("M-g e" . consult-compile-error)
 	 ("M-g f" . consult-flymake)               ;; Alternative: consult-flycheck
-	 ("M-g g" . consult-goto-line)             ;; orig. goto-line
-	 ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
 	 ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
 	 ("M-g m" . consult-mark)
 	 ("M-g k" . consult-global-mark)
 	 ("M-g i" . consult-imenu)
 	 ("M-g I" . consult-imenu-multi)
 	 ;; M-s bindings in `search-map'
-	 ("M-s d" . consult-find)                  ;; Alternative: consult-fd
-	 ("M-s c" . consult-locate)
-	 ("M-s g" . consult-grep)
-	 ("M-s G" . consult-git-grep)
-	 ("M-s r" . consult-ripgrep)
-	 ("M-s l" . consult-line)
-	 ("M-s L" . consult-line-multi)
-	 ("M-s k" . consult-keep-lines)
-	 ("M-s u" . consult-focus-lines)
-	 ;; Isearch integration
-	 ("M-s e" . consult-isearch-history)
-	 :map isearch-mode-map
-	 ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
-	 ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
-	 ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
-	 ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch
-	 ;; Minibuffer history
-	 :map minibuffer-local-map
-	 ("M-s" . consult-history)                 ;; orig. next-matching-history-element
-	 ("M-r" . consult-history))                ;; orig. previous-matching-history-element
+)                ;; orig. previous-matching-history-element
 
   ;; Enable automatic preview at point in the *Completions* buffer. This is
   ;; relevant when you use the default completion UI.
@@ -733,10 +699,6 @@
   ;; You may want to use `embark-prefix-help-command' or which-key instead.
   ;; (keymap-set consult-narrow-map (concat consult-narrow-key " ?") #'consult-narrow-help)
 )
-(evil-global-set-key 'normal  (kbd "<leader>ff"  )'find-file)
-(evil-global-set-key 'normal  (kbd "<leader>fb"  )'consult-buffer)
-(evil-global-set-key 'normal  (kbd "<leader>fw"  )'consult-ripgrep)
-(evil-global-set-key 'normal  (kbd "<leader>fd"  )'consult-find)
 
 
 (use-package embark
@@ -769,7 +731,6 @@
   :ensure t ; only need to install it, embark loads it after consult if found
   :hook
   (embark-collect-mode . consult-preview-at-point-mode))
-
 
 
 (defun chess/check-rich ()
@@ -822,57 +783,46 @@
   :defer
   :commands magit-status
   :config
- (evil-define-key 'normal 'global (kbd "<leader>g") 'magit)
-  :custom
-  (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+(evil-global-set-key 'normal (kbd "<leader>g") 'magit))
 
+(use-package haskell-mode
+  :config
+  (defun hly/evil-open-below (count)
+    "Simulate evil’s o using ‘A RET’.
+    - https://github.com/haskell/haskell-mode/issues/1265
+    - https://emacs.stackexchange.com/a/2471
+    "
+    (interactive "p")
+    (setq unread-command-events (listify-key-sequence (kbd "RET")))
+    (evil-append-line count))
 
-;; haskell-mode
-(setq haskell-interactive-popup-errors nil)
-(defun hly/evil-open-below (count)
-  "Simulate evil’s o using ‘A RET’.
+  (defun hly/evil-open-above (count)
+    "Simulate evil’s O using ‘UP A RET’.
+    Doesn’t work on the first line of a file.
+    "
+    (interactive "p")
+    (forward-line -1)
+    (hly/evil-open-below count))
 
-Evil’s native \\[evil-open-below] is too unreliable in the face of various
-major
-modes messing with indenting. This bruteforces it by relying on (the more
-reliable) RET, instead.
+  (with-eval-after-load "haskell-mode"
+    (evil-define-key 'normal haskell-mode-map "o" 'hly/evil-open-below)
+    (evil-define-key 'normal haskell-mode-map "O" 'hly/evil-open-above))
 
-See:
-- https://github.com/haskell/haskell-mode/issues/1265
-- https://emacs.stackexchange.com/a/2471
-"
-  (interactive "p")
-  (setq unread-command-events (listify-key-sequence (kbd "RET")))
-  (evil-append-line count))
+  (defun my/haskell-fast-tags ()
+    ;; Use (buffer-file-name) and/or `default-directory` if necessary here
+    (let ((default-directory (haskell-cabal--find-tags-dir)))
+      (shell-command "~/.local/bin/fast-tags ...")))
 
-(defun hly/evil-open-above (count)
-  "Simulate evil’s O using ‘UP A RET’.
+  (add-hook 'haskell-mode-hook (lambda () (add-hook 'after-save-hook 'my/haskell-fast-tags t)))
+  (add-hook 'haskell-mode-hook (lambda () (global-unset-key (kbd "<tab>")))))
 
-Evil’s native \\[evil-open-above] is too unreliable in the face of various major
-modes messing with indenting. This bruteforces it by relying on (the more
-reliable) RET, instead.
+;; UI packages
+(use-package spacious-padding
+  :demand
+  :config
+  (spacious-padding-mode))
 
-Doesn’t work on the first line of a file.
-"
-  (interactive "p")
-  (forward-line -1)
-  (hly/evil-open-below count))
-
-(with-eval-after-load "haskell-mode"
-  (evil-define-key 'normal haskell-mode-map "o" 'hly/evil-open-below)
-  (evil-define-key 'normal haskell-mode-map "O" 'hly/evil-open-above))
-
-(defun my/haskell-fast-tags ()
-   ;; Use (buffer-file-name) and/or `default-directory` if necessary here
-   (let ((default-directory (haskell-cabal--find-tags-dir)))
-     (shell-command "~/.local/bin/fast-tags ...")))
-
-(add-hook 'haskell-mode-hook (lambda () (add-hook 'after-save-hook 'my/haskell-fast-tags t)))
-(add-hook 'haskell-mode-hook (lambda () (global-unset-key (kbd "<tab>"))))
-
-
-
-    ;;;; Code Completion
+;;; Code Completion
 (use-package corfu
   :ensure t
   ;; Optional customizations
@@ -935,10 +885,6 @@ Doesn’t work on the first line of a file.
   :commands term
   :config
   (setq explicit-shell-file-name "zsh"))
-
-(use-package eterm-256color
-  :defer
-  :hook (term-mode . eterm-256color-mode))
 
 (defun chess/check-if-vterm-is-visible ()
   (interactive)
@@ -1009,9 +955,7 @@ A single-digit prefix argument gives the top window arg*10%."
   :defer)
 
 (use-package elfeed-tube
-  :defer
-  :init
-  (elfeed-tube-setup))
+  :defer)
 
 (defun my-split-window-left-compilation (&optional arg)
   "Split the window 70/30, then open the *compilation* window in it."
@@ -1041,7 +985,7 @@ A single-digit prefix argument gives the top window arg*10%."
 (global-display-line-numbers-mode t)
 
 ;; fonts and line spacing
-(defvar emacs_font "Iosevka Comfy")
+(defvar emacs_font "Iosevka Comfy 8")
 (defvar fallback_font "Iosevka Comfy")
 (set-face-attribute 'default nil :font emacs_font)
 (set-face-attribute 'fixed-pitch nil :font emacs_font)
@@ -1060,9 +1004,10 @@ A single-digit prefix argument gives the top window arg*10%."
    '("d6b934330450d9de1112cbb7617eaf929244d192c4ffb1b9e6b63ad574784aad" "019184a760d9747744783826fcdb1572f9efefc5c19ed43b6243e66638fb9960" "01a9797244146bbae39b18ef37e6f2ca5bebded90d9fe3a2f342a9e863aaa4fd" "6e18353d35efc18952c57d3c7ef966cad563dc65a2bba0660b951d990e23fc07" "113a135eb7a2ace6d9801469324f9f7624f8c696b72e3709feb7368b06ddaccc" "9d29a302302cce971d988eb51bd17c1d2be6cd68305710446f658958c0640f68" "81f53ee9ddd3f8559f94c127c9327d578e264c574cda7c6d9daddaec226f87bb" "9f297216c88ca3f47e5f10f8bd884ab24ac5bc9d884f0f23589b0a46a608fe14" "4ade6b630ba8cbab10703b27fd05bb43aaf8a3e5ba8c2dc1ea4a2de5f8d45882" "88f7ee5594021c60a4a6a1c275614103de8c1435d6d08cc58882f920e0cec65e" "691d671429fa6c6d73098fc6ff05d4a14a323ea0a18787daeb93fde0e48ab18b" "e9d2cfe6cdb1ed56d4f886e01c67ffa88aedb315ce7ea795ccdc34f15e01e09b" "b5fd9c7429d52190235f2383e47d340d7ff769f141cd8f9e7a4629a81abc6b19" "8d3ef5ff6273f2a552152c7febc40eabca26bae05bd12bc85062e2dc224cde9a" "48042425e84cd92184837e01d0b4fe9f912d875c43021c3bcb7eeb51f1be5710" default))
  '(desktop-path '("/home/sigma/.cache/emacs/") t)
  '(elcord-refresh-rate 60)
-'(elfeed-feeds
-   '("https://www.youtube.com/feeds/videos.xml?channel_id=UC0uTPqBCFIpZxlz_Lv1tk_g"))
+ '(elfeed-feeds
+   '("https://endlessparentheses.com/atom.xml" "https://www.youtube.com/feeds/videos.xml?channel_id=UC0uTPqBCFIpZxlz_Lv1tk_g"))
  '(global-display-line-numbers-mode t)
+ '(haskell-interactive-popup-errors nil)
  '(openwith-associations
    '(("\\.pdf\\'" "zathura"
       (file))
