@@ -1,4 +1,4 @@
-;; The default is 800 kilobytes.  Measured in bytes.
+; The default is 800 kilobyt.  Measured in bytes.
 (setq gc-cons-threshold (* 50 1000 1000))
 
 (add-to-list 'exec-path "/home/sigma/.local/share/nvim/mason/bin" )
@@ -9,7 +9,7 @@
 ;; (setenv "LSP_USE_PLISTS" "1")
 
 
-(setq compilation-ask-about-save nil)
+(setq-default compilation-ask-about-save nil)
 
 (defun efs/display-startup-time ()
   (message "Emacs loaded in %s"
@@ -19,15 +19,7 @@
 
 (add-hook 'emacs-startup-hook #'efs/display-startup-time)
 
-(setq mode-line-format
-              '("%e" mode-line-front-space
-                (:propertize
-                 ("" mode-line-mule-info mode-line-client mode-line-modified
-                  mode-line-remote)
-                 display (min-width (5.0)))
-                mode-line-frame-identification mode-line-buffer-identification "   "
-                 
-                mode-line-misc-info mode-line-end-spaces "  " mode-line-modes))
+
 
 (defun goto-org-task-with-state-current ()
   "Search all `org-agenda-files` for a task with the Org state 'CURRENT' and jump to it."
@@ -133,13 +125,20 @@
 (which-key-mode)
 
 (use-package avy
-  :after evil-mc
+  :after evil
   :ensure t
   :config
   (evil-global-set-key 'normal "s" 'avy-goto-char-2)
   (evil-global-set-key 'normal "S" 'avy-goto-char-timer)
+  (evil-global-set-key 'visual "s" 'avy-goto-char-2)
+  (evil-global-set-key 'visual "S" 'avy-goto-char-timer)
   (setq avy-timeout-seconds 0.02))
 
+(use-package unicode-fonts
+  :ensure t
+  :init
+  (unicode-fonts-setup) 
+  )
 
 
 (use-package yasnippet-snippets
@@ -153,8 +152,13 @@
 
 (use-package winner
   :ensure nil
+  :after evil
+  :init
+  (winner-mode)
   :config
-  (winner-mode))
+
+  (evil-define-key 'normal 'global (kbd "<leader>wu"  )#'winner-undo)
+  (evil-define-key 'normal 'global (kbd "<leader>wr"  )#'winner-redo))
 
 (use-package evil
   :demand
@@ -168,48 +172,50 @@
   :config
   (evil-mode 1)
   (evil-set-leader nil (kbd ";"))
-  (evil-global-set-key 'normal  "H" 'evil-beginning-of-line)
-  (evil-global-set-key 'visual  "H" 'evil-beginning-of-line)
-  (evil-global-set-key 'normal  "L" 'evil-end-of-line)
-  (evil-global-set-key 'normal (kbd "<leader>mg") 'goto-org-task-with-state-current)
-  (evil-global-set-key 'visual  "L" 'evil-end-of-line)
+
+
+  (evil-global-set-key 'normal (kbd "<leader>mg") #'goto-org-task-with-state-current)
+  (evil-global-set-key 'normal (kbd "<leader>fs") #'save-buffer)
+  (evil-global-set-key 'normal (kbd "<leader>bl") #'mode-line-other-buffer)
+  (evil-global-set-key 'normal (kbd "<leader>to") #'tab-next)
+  (evil-global-set-key 'normal (kbd "<leader>t2") #'tab-new)
+  (evil-global-set-key 'normal (kbd "<leader>t0") #'tab-close)
+  (evil-global-set-key 'normal (kbd "<leader>t0") #'tab-close)
+  (evil-global-set-key 'normal (kbd "<leader>hk") #'describe-key)
+  (evil-global-set-key 'normal (kbd "<leader>x") #'other-window)
+  (evil-global-set-key 'normal (kbd "<leader>wl") 'evil-window-right)
+  (evil-global-set-key 'normal (kbd "<leader>wh") 'evil-window-left)
+  (evil-global-set-key 'normal (kbd "<leader>wk") 'evil-window-up)
+  (evil-global-set-key 'normal (kbd "<leader>wj") 'evil-window-down)
+  (evil-global-set-key 'normal (kbd "<leader>ww") 'evil-window-next)
+  (evil-global-set-key 'normal (kbd "<leader>wc") 'evil-window-delete)
+  (evil-global-set-key 'normal (kbd "<leader>ws") 'evil-window-split)
+  (evil-global-set-key 'normal (kbd "<leader>tt") 'toggle-truncate-lines)
+  (evil-global-set-key 'normal (kbd "<leader>wv") 'evil-window-vsplit)
+  (evil-global-set-key 'normal (kbd "<leader>ee") 'eval-last-sexp)
+  (evil-global-set-key 'normal (kbd "<leader>ff") 'find-file)
+  (evil-global-set-key 'normal (kbd "<leader>fr") 'recentf)
+  (evil-global-set-key 'normal (kbd "<leader>bk") 'kill-this-buffer)
+  (evil-global-set-key 'normal (kbd "<leader>rb") 'bookmark-jump)
+  (evil-global-set-key 'normal (kbd "<leader>rm") 'bookmark-set)
+  (evil-global-set-key 'normal (kbd "<leader>cc") 'recompile)
+  (evil-global-set-key 'normal (kbd "<leader>cC") 'compile)
+  (evil-global-set-key 'normal (kbd "C-x C-m") 'chess/select-music)
+
+  (evil-global-set-key 'visual (kbd "gcc") 'comment-region)
+  (evil-global-set-key 'visual (kbd "gcu") 'uncomment-region)
+  (evil-global-set-key 'visual (kbd "<leader>ee") 'eval-region)
+
   (evil-define-key '(visual insert) 'global (kbd "C-c C-c C-v") 'clipboard-yank)
   (evil-define-key '(insert) 'global (kbd "C-c C-c C-c") 'clipboard-kill-region)
 
-  (evil-define-key 'normal 'global (kbd "<leader>fs") 'save-buffer)
-  (evil-define-key 'normal 'global (kbd "<leader>bl") 'mode-line-other-buffer)
-  (evil-define-key 'normal 'global (kbd "<leader>to") 'tab-next)
-  (evil-define-key 'normal 'global (kbd "<leader>t2") 'tab-new)
-  (evil-define-key 'normal 'global (kbd "<leader>t0") 'tab-close)
-  (evil-define-key 'normal 'global (kbd "<leader>xx") 'execute-extended-command)
-  (evil-define-key 'normal 'global (kbd "<leader>hk") 'describe-key)
-  (evil-define-key 'normal 'global (kbd "<leader>x") 'other-window)
-  (evil-define-key 'normal 'global (kbd "<leader>wl") 'evil-window-right)
-  (evil-define-key 'normal 'global (kbd "<leader>wh") 'evil-window-left)
-  (evil-define-key 'normal 'global (kbd "<leader>wk") 'evil-window-up)
-  (evil-define-key 'normal 'global (kbd "<leader>wj") 'evil-window-down)
-  (evil-define-key 'normal 'global (kbd "<leader>ww") 'evil-window-next)
-  (evil-define-key 'normal 'global (kbd "<leader>wc") 'evil-window-delete)
-  (evil-define-key 'normal 'global (kbd "<leader>ws") 'evil-window-split)
-  (evil-define-key 'normal 'global (kbd "<leader>tt") 'toggle-truncate-lines)
-  (evil-define-key 'normal 'global (kbd "<leader>wv") 'evil-window-vsplit)
-  (evil-define-key 'visual 'global (kbd "gcc") 'comment-region)
-  (evil-define-key 'visual 'global (kbd "gcu") 'uncomment-region)
-  (evil-define-key 'visual 'global (kbd "<leader>ee") 'eval-region)
-  (evil-define-key 'normal 'global (kbd "<leader>ee") 'eval-last-sexp)
-  (evil-define-key 'normal 'global (kbd "<leader>ff") 'find-file)
-  (evil-define-key 'normal 'global (kbd "<leader>fr") 'recentf)
-  (evil-define-key 'normal 'global (kbd "<leader>bk") 'kill-this-buffer)
-  (evil-define-key 'normal 'global (kbd "<leader>rb") 'bookmark-jump)
-  (evil-define-key 'normal 'global (kbd "<leader>rm") 'bookmark-set)
-  (evil-define-key 'normal 'global (kbd "<leader>cc") 'recompile)
-  (evil-define-key 'normal 'global (kbd "<leader>cC") 'compile)
-  (evil-define-key 'normal 'global (kbd "C-x C-m") 'chess/select-music)
+
   (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
   (define-key global-map (kbd "C-x C-a C-r") 'gud-run)
   ;; Use visual line motions even outside of visual-line-mode buffers
   (evil-global-set-key 'motion "j" 'evil-next-visual-line)
   (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+
   (evil-set-initial-state 'es-buffer-mode 'normal)
   (evil-set-initial-state 'dashboard-mode 'normal))
 
@@ -217,16 +223,16 @@
 
 (use-package evil-mc
   :config
-  (evil-define-key '(normal visual) 'global (kbd "<leader>mm") 'evil-mc-make-and-goto-next-match)
-  (evil-define-key '(normal visual) 'global (kbd "<leader>mr") 'evil-mc-undo-all-cursors)
-  (evil-define-key '(normal visual) 'global (kbd "<leader>mp") 'evil-mc-make-and-goto-prev-match)
-  (evil-define-key '(normal visual) 'global (kbd "C->") 'evil-mc-skip-and-goto-next-match)
-  (evil-define-key '(normal visual) 'global (kbd "C-<") 'evil-mc-skip-and-goto-prev-match))
+  (evil-global-set-key 'normal  (kbd "<leader>mm") 'evil-mc-make-and-goto-next-match)
+  (evil-global-set-key 'normal  (kbd "<leader>mcr") 'evil-mc-undo-all-cursors)
+  (evil-global-set-key 'normal  (kbd "<leader>mp") 'evil-mc-make-and-goto-prev-match)
+  (evil-global-set-key 'normal  (kbd "C->") 'evil-mc-skip-and-goto-next-match)
+  (evil-global-set-key 'normal (kbd "C-<") 'evil-mc-skip-and-goto-prev-match)
+  (global-evil-mc-mode 1))
 
-(global-evil-mc-mode 1)
 (use-package expand-region
   :config
-  (evil-define-key 'normal 'global (kbd "<leader>es") 'er/expand-region)
+  (evil-global-set-key 'normal (kbd "<leader>es") #'er/expand-region)
   (keymap-global-set "M-'" 'er/expand-region))
 
 (use-package evil-snipe
@@ -240,8 +246,7 @@
   (evil-define-key '(normal motion) evil-snipe-local-mode-map
     "s" 'nil
     "S" 'nil)
-  (evil-snipe-mode 1 )
-  )
+  (evil-snipe-mode 1 ))
 
 (use-package evil-surround
   :ensure t
@@ -366,6 +371,12 @@
   (setq Tex-auto-save t)
   (setq Tex-parse-self t))
 
+(use-package treesit-auto
+  :ensure t
+  :demand t
+  :config
+  (global-treesit-auto-mode))
+
 (use-package org
   :pin org
   :commands (org-capture org-agenda)
@@ -390,7 +401,7 @@
   (require 'org-habit)
   (add-to-list 'org-modules 'org-habit)
   (setq org-habit-graph-column 60)
-  (setq org-todo-keywords '((sequence "TODO(t)" "CURRENT(u)" "CONFIG(C)" "NEXT(n)" "STEP(s)" "INFO(f)" "PROGRESS(i)" "CLASS(c)" "PROJ(p)" "LOOP(r)" "WAIT(w)" "EVENT(e)" "HOLD(h)" "EMAIL(m)"  "IDEA(i)" "|""DONE(d)" "KILL(k)" "[X](X)")))
+  (setq org-todo-keywords '((sequence "TODO(t)" "ASSIGNMENT(a)" "CURRENT(u)" "CONFIG(C)" "NEXT(n)" "STEP(s)" "INFO(f)" "PROGRESS(i)" "RESEARCH(r)" "CLASS(c)" "PROJ(p)" "WAIT(w)" "EVENT(e)" "HOLD(h)" "EMAIL(m)"  "IDEA(i)" "|""DONE(d)" "KILL(k)" "[X](X)")))
   (setq org-time-stamp-custom-formats '( "%H:%M>"))
   (setq org-capture-templates
 	'(("t" "Todo" entry (file+headline "~/projects/notes/todo.org" "Todos")
@@ -400,7 +411,7 @@
 	  ("r" "refile" entry (file+headline "~/projects/notes/refile.org" "Todos")
 	   "* TODO %?\n  %i refile: ")
 	  ("l" "today I learnt" entry (file+headline "~/projects/notes/today-i-learnt.org" "Todos")
-	   "* TODO %i TIL: %? ")
+	   "* %t TIL: %? ")
 	  ("c" "Config" entry (file+headline "~/projects/notes/config.org" "Configuration")
 	   "* CONFIG %i %? ")))
   (efs/org-font-setup)
@@ -419,38 +430,42 @@
   (evil-define-key 'normal 'global (kbd "<leader>mci") 'org-clock-in)
   (evil-define-key 'normal 'global (kbd "<leader>mco") 'org-clock-out)
   (evil-define-key 'normal 'global (kbd "<leader>mcl") 'org-clock-in-last)
-  (evil-define-key 'normal 'global (kbd "<leader>nts") 'org-narrow-to-subtree)
   (evil-define-key 'normal 'global (kbd "<leader>mr") 'org-refile)
   (evil-define-key 'normal 'global (kbd "<leader>me") 'org-set-effort)
-  (evil-define-key 'normal 'global (kbd "<leader>nte") 'org-narrow-to-element)
-  (evil-define-key 'normal 'global (kbd "<leader>nwi") 'widen)
   (evil-define-key 'normal 'global (kbd "<leader>mcc") 'org-capture)
   (evil-define-key 'normal 'global (kbd "<leader>moa") 'org-agenda)
   (evil-define-key 'normal 'global (kbd "<leader>ndy") 'org-roam-dailies-goto-today)
   (evil-define-key 'normal 'global (kbd "<leader>ndw") 'org-roam-dailies-goto-tomorrow)
-  (evil-define-key 'normal 'global (kbd "<leader>ml") 'org-latex-preview)
-  (evil-define-key 'normal 'global (kbd "<leader>mt") 'org-todo))
+  )
 
-(with-eval-after-load 'org
-  (evil-define-key 'normal 'org-mode-map (kbd "M-l") 'org-metaright)
-  (evil-define-key 'normal 'org-mode-map (kbd "M-h") 'org-metaleft)
-  (evil-define-key 'normal 'org-mode-map (kbd "M-k") 'org-metaup)
-  (evil-define-key 'normal 'org-mode-map (kbd "M-j") 'org-metadown)
+(defun chess/org-mode-maps ()
 
-  (evil-define-key 'normal 'org-mode-map (kbd "M-L") 'org-shiftmetaright)
-  (evil-define-key 'normal 'org-mode-map (kbd "M-H") 'org-shiftmetaleft)
-  (evil-define-key 'normal 'org-mode-map (kbd "M-K") 'org-shiftmetaup)
-  (evil-define-key 'normal 'org-mode-map (kbd "M-J") 'org-shiftmetadown)
+  (evil-local-set-key 'normal  (kbd "<leader>nts") 'org-narrow-to-subtree)
+  (evil-local-set-key 'normal  (kbd "<leader>nte") 'org-narrow-to-element)
+  (evil-local-set-key 'normal  (kbd "<leader>nwi") 'widen)
+  (evil-local-set-key 'normal  (kbd "<leader>ml") 'org-latex-preview)
+  (evil-local-set-key 'normal  (kbd "<leader>mt") 'org-todo)
+  (evil-local-set-key 'normal (kbd "M-l") 'org-metaright)
+  (evil-local-set-key 'normal (kbd "M-h") 'org-metaleft)
+  (evil-local-set-key 'normal (kbd "M-k") 'org-metaup)
+  (evil-local-set-key 'normal (kbd "M-j") 'org-metadown)
+
+  (evil-local-set-key 'normal (kbd "M-L") 'org-shiftmetaright)
+  (evil-local-set-key 'normal (kbd "M-H") 'org-shiftmetaleft)
+  (evil-local-set-key 'normal (kbd "M-K") 'org-shiftmetaup)
+  (evil-local-set-key 'normal (kbd "M-J") 'org-shiftmetadown)
   
-  (evil-define-key 'normal 'org-mode-map (kbd "L") 'org-shiftright)
-  (evil-define-key 'normal 'org-mode-map (kbd "H") 'org-shiftleft)
-  (evil-define-key 'normal 'org-mode-map (kbd "K") 'org-shiftup)
-  (evil-define-key 'normal 'org-mode-map (kbd "J") 'org-shiftdown)
+  (evil-local-set-key 'normal (kbd "L") 'org-shiftright)
+  (evil-local-set-key 'normal (kbd "H") 'org-shiftleft)
+  (evil-local-set-key 'normal (kbd "K") 'org-shiftup)
+  (evil-local-set-key 'normal (kbd "J") 'org-shiftdown)
 
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((python . t)))
   (push '("conf-unix" . conf-unix) org-src-lang-modes))
+
+(add-hook 'org-mode-hook 'chess/org-mode-maps)
 
 (with-eval-after-load 'org
   ;; This is needed as of Org 9.2
@@ -520,18 +535,21 @@
   ;; (vertico-count 20) ;; Show more candidates
   (setq vertico-resize t) ;; Grow and shrink the Vertico minibuffer
   (vertico-cycle t) ;; Enable cycling for `vertico-next/previous'
-  :init
-  (vertico-multiform-mode)
+  :config
   (setq vertico-multiform-commands
-	'((consult-imenu buffer)
+	'(
 	  (consult-grep buffer)
-	  (imenu buffer)
+	  (imenu flat)
+	  (consult-imenu flat)
 	  (find-file flat)
 	  (projectile-find-file flat)
 	  (projectile-switch-project flat)
-	  (persp-frame-switch flat)
 	  (execute-extended-command flat)
 	  (consult-buffer flat)))
+
+  ;; enable vertico-mode
+  :init
+  (vertico-multiform-mode)
   (vertico-mode))
 
 
@@ -722,6 +740,7 @@
 
 
 (use-package embark
+  :defer t
   :ensure t
   :bind
   (("C-." . embark-act)         ;; pick some comfortable binding
@@ -852,6 +871,7 @@ Doesn’t work on the first line of a file.
 (add-hook 'haskell-mode-hook (lambda () (global-unset-key (kbd "<tab>"))))
 
 
+
     ;;;; Code Completion
 (use-package corfu
   :ensure t
@@ -892,6 +912,15 @@ Doesn’t work on the first line of a file.
 (use-package copilot
   :straight (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
   :ensure t
+  :config 
+  (let ((indentations '((emacs-lisp-mode . 2)
+			(text-mode . 2)
+			(org-mode . 2)
+			(special-mode . 2)
+			(markdown-mode . 2))))
+    (dolist (indentation indentations)
+      (add-to-list 'copilot-indentation-alist indentation)))
+
   :bind (:map copilot-completion-map
 	      ("<tab>" . 'copilot-accept-completion)
 	      ("TAB" . 'copilot-accept-completion)
@@ -966,7 +995,7 @@ Doesn’t work on the first line of a file.
 
 ;; use splitright for window splits
 (setq split-height-threshold 120)
-(setq split-width-threshold 1)
+(setq split-width-threshold 160)
 
 (defun my-split-window-below-compilation (&optional arg)
   "Split the current window 70/30 rather than 50/50.
@@ -974,6 +1003,15 @@ A single-digit prefix argument gives the top window arg*10%."
   (interactive "P")
   (let ((proportion (* (or arg 7) 0.1)))
     (split-window-below (round (* proportion (window-height))))))
+
+;; rss feeds
+(use-package elfeed
+  :defer)
+
+(use-package elfeed-tube
+  :defer
+  :init
+  (elfeed-tube-setup))
 
 (defun my-split-window-left-compilation (&optional arg)
   "Split the window 70/30, then open the *compilation* window in it."
@@ -983,31 +1021,47 @@ A single-digit prefix argument gives the top window arg*10%."
       (select-window new-window)
       (switch-to-buffer "*compilation*"))))
 
-;; disable the warning from copilot about copilot--infer-indendation offset
-(setq copilot--infer-indentation nil)
-
 (global-set-key (kbd "C-x 2") 'my-split-window-below-compilation)
 (global-set-key (kbd "C-x c") 'my-split-window-left-compilation)
 
+
+(setq-default mode-line-format
+              '("%e" mode-line-front-space
+                (:propertize
+                 ("" mode-line-mule-info mode-line-client mode-line-modified
+                  mode-line-remote)
+                 display (min-width (5.0)))
+                mode-line-frame-identification mode-line-buffer-identification "   "
+                 
+                mode-line-misc-info mode-line-end-spaces "  " mode-line-modes))
+
 ;; Make gc pauses faster by decreasing the threshold.
+(setq-default line-spacing 0)
 (setq gc-cons-threshold (* 8 1000 1000))
+(global-display-line-numbers-mode t)
 
 ;; fonts and line spacing
-(set-face-attribute 'default nil :font "azuki_font" )
-(set-face-attribute 'fixed-pitch nil :font "azuki_font")
-(set-face-attribute 'variable-pitch nil :font "azuki_font")
-(setq-default line-spacing nil)
-(global-display-line-numbers-mode t)
-(add-to-list 'default-frame-alist '(font . "Iosevka Comfy"))
+(defvar emacs_font "Iosevka Comfy")
+(defvar fallback_font "Iosevka Comfy")
+(set-face-attribute 'default nil :font emacs_font)
+(set-face-attribute 'fixed-pitch nil :font emacs_font)
+(set-face-attribute 'variable-pitch nil :font emacs_font)
+(add-to-list 'default-frame-alist (cons 'font emacs_font))  ;; initialize with this font
+(set-fontset-font t 'unicode fallback_font nil 'append) ;; fallback font
+
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(auto-save-timeout 0)
  '(custom-safe-themes
    '("d6b934330450d9de1112cbb7617eaf929244d192c4ffb1b9e6b63ad574784aad" "019184a760d9747744783826fcdb1572f9efefc5c19ed43b6243e66638fb9960" "01a9797244146bbae39b18ef37e6f2ca5bebded90d9fe3a2f342a9e863aaa4fd" "6e18353d35efc18952c57d3c7ef966cad563dc65a2bba0660b951d990e23fc07" "113a135eb7a2ace6d9801469324f9f7624f8c696b72e3709feb7368b06ddaccc" "9d29a302302cce971d988eb51bd17c1d2be6cd68305710446f658958c0640f68" "81f53ee9ddd3f8559f94c127c9327d578e264c574cda7c6d9daddaec226f87bb" "9f297216c88ca3f47e5f10f8bd884ab24ac5bc9d884f0f23589b0a46a608fe14" "4ade6b630ba8cbab10703b27fd05bb43aaf8a3e5ba8c2dc1ea4a2de5f8d45882" "88f7ee5594021c60a4a6a1c275614103de8c1435d6d08cc58882f920e0cec65e" "691d671429fa6c6d73098fc6ff05d4a14a323ea0a18787daeb93fde0e48ab18b" "e9d2cfe6cdb1ed56d4f886e01c67ffa88aedb315ce7ea795ccdc34f15e01e09b" "b5fd9c7429d52190235f2383e47d340d7ff769f141cd8f9e7a4629a81abc6b19" "8d3ef5ff6273f2a552152c7febc40eabca26bae05bd12bc85062e2dc224cde9a" "48042425e84cd92184837e01d0b4fe9f912d875c43021c3bcb7eeb51f1be5710" default))
+ '(desktop-path '("/home/sigma/.cache/emacs/") t)
  '(elcord-refresh-rate 60)
+'(elfeed-feeds
+   '("https://www.youtube.com/feeds/videos.xml?channel_id=UC0uTPqBCFIpZxlz_Lv1tk_g"))
  '(global-display-line-numbers-mode t)
  '(openwith-associations
    '(("\\.pdf\\'" "zathura"
@@ -1034,3 +1088,6 @@ A single-digit prefix argument gives the top window arg*10%."
  )
 (put 'narrow-to-region 'disabled nil)
 (put 'dired-find-alternate-file 'disabled nil)
+
+
+(put 'narrow-to-page 'disabled nil)
