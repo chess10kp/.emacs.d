@@ -936,7 +936,8 @@ instead of `browse-url-new-window-flag'."
 (global-display-line-numbers-mode t)
 (fset 'yes-or-no-p 'y-or-n-p)
 
-;;;  buffer display rules 
+;;;  buffer display rules
+;; buffers follow specific fules
 (setq display-buffer-alist
       '(
 	("\\*compilation\\*"
